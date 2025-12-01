@@ -457,8 +457,8 @@ def main():
         
         # Display fixed settings
         st.markdown("### Settings")
-        st.info(f"**Number of Stations:** 10 (fixed)")
-        st.info(f"**ASHRAE Version:** 2021 (fixed)")
+        st.info(f"**Number of Stations:** 10")
+        st.info(f"**ASHRAE Version:** 2021")
         
         # Unit system
         unit_system = st.radio(
