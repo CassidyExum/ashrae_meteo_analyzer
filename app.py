@@ -51,7 +51,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # API Functions
-def get_url_generator(lat: float, long: float, num_stations: int = 10, version: int = 2017) -> str:
+def get_url_generator(lat: float, long: float, num_stations: int = 10, version: int = 2021) -> str:
     """Generate URL for ASHRAE stations API"""
     url = 'https://ashrae-meteo.info/v3.0/request_places_get.php?'
     url1 = url + 'lat=' + str(lat) + '&long=' + str(long) + '&number=' + str(num_stations) + '&ashrae_version=' + str(version)
@@ -61,7 +61,7 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
     """
     Get nearest weather stations to given coordinates
     """
-    url = get_url_generator(lat, long, num_stations)
+    url = get_url_generator(lat, long, num_stations, version=2021)
     
     try:
         response = requests.get(url, timeout=30)
@@ -85,7 +85,7 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
         st.error(f"Error fetching stations: {e}")
         return []
 
-def get_station_data(wmo: str, ashrae_version: int = 2017, si_ip: str = "SI") -> Optional[Dict]:
+def get_station_data(wmo: str, ashrae_version: int = 2021, si_ip: str = "SI") -> Optional[Dict]:
     """
     Get detailed meteorological data for a specific station by WMO code
     """
@@ -125,88 +125,6 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
         })
     
     return pd.DataFrame(table_data)
-
-def categorize_station_data(data: Dict) -> Dict:
-    """Categorize station data into logical groups"""
-    if not data:
-        return {}
-    
-    categories = {
-        "Station Information": {
-            "place": data.get('place'),
-            "wmo": data.get('wmo'),
-            "lat": data.get('lat'),
-            "long": data.get('long'),
-            "elev": data.get('elev'),
-            "country": data.get('country'),
-            "state": data.get('state'),
-            "period": data.get('period'),
-            "time_zone": data.get('time_zone'),
-            "coldest_month": data.get('coldest_month'),
-            "hottest_month": data.get('hottest_month'),
-        },
-        "Heating Design Conditions": {
-            "heating_DB_99.6": data.get('heating_DB_99.6'),
-            "heating_DB_99": data.get('heating_DB_99'),
-            "humidification_DP/MCDB_and_HR_99.6_DP": data.get('humidification_DP/MCDB_and_HR_99.6_DP'),
-            "humidification_DP/MCDB_and_HR_99.6_HR": data.get('humidification_DP/MCDB_and_HR_99.6_HR'),
-            "humidification_DP/MCDB_and_HR_99.6_MCDB": data.get('humidification_DP/MCDB_and_HR_99.6_MCDB'),
-        },
-        "Cooling Design Conditions": {
-            "cooling_DB_MCWB_0.4_DB": data.get('cooling_DB_MCWB_0.4_DB'),
-            "cooling_DB_MCWB_0.4_MCWB": data.get('cooling_DB_MCWB_0.4_MCWB'),
-            "cooling_DB_MCWB_1_DB": data.get('cooling_DB_MCWB_1_DB'),
-            "cooling_DB_MCWB_1_MCWB": data.get('cooling_DB_MCWB_1_MCWB'),
-            "cooling_DB_MCWB_2_DB": data.get('cooling_DB_MCWB_2_DB'),
-            "cooling_DB_MCWB_2_MCWB": data.get('cooling_DB_MCWB_2_MCWB'),
-        },
-        "Extreme Temperatures": {
-            "extreme_max_WB": data.get('extreme_max_WB'),
-            "extreme_annual_DB_mean_min": data.get('extreme_annual_DB_mean_min'),
-            "extreme_annual_DB_mean_max": data.get('extreme_annual_DB_mean_max'),
-            "n-year_return_period_values_of_extreme_DB_5_min": data.get('n-year_return_period_values_of_extreme_DB_5_min'),
-            "n-year_return_period_values_of_extreme_DB_5_max": data.get('n-year_return_period_values_of_extreme_DB_5_max'),
-            "n-year_return_period_values_of_extreme_DB_10_min": data.get('n-year_return_period_values_of_extreme_DB_10_min'),
-            "n-year_return_period_values_of_extreme_DB_10_max": data.get('n-year_return_period_values_of_extreme_DB_10_max'),
-            "n-year_return_period_values_of_extreme_DB_20_min": data.get('n-year_return_period_values_of_extreme_DB_20_min'),
-            "n-year_return_period_values_of_extreme_DB_20_max": data.get('n-year_return_period_values_of_extreme_DB_20_max'),
-            "n-year_return_period_values_of_extreme_DB_50_min": data.get('n-year_return_period_values_of_extreme_DB_50_min'),
-            "n-year_return_period_values_of_extreme_DB_50_max": data.get('n-year_return_period_values_of_extreme_DB_50_max'),
-        },
-        "Monthly Average Temperatures (°C)": {
-            "tavg_jan": data.get('tavg_jan'),
-            "tavg_feb": data.get('tavg_feb'),
-            "tavg_mar": data.get('tavg_mar'),
-            "tavg_apr": data.get('tavg_apr'),
-            "tavg_may": data.get('tavg_may'),
-            "tavg_jun": data.get('tavg_jun'),
-            "tavg_jul": data.get('tavg_jul'),
-            "tavg_aug": data.get('tavg_aug'),
-            "tavg_sep": data.get('tavg_sep'),
-            "tavg_oct": data.get('tavg_oct'),
-            "tavg_nov": data.get('tavg_nov'),
-            "tavg_dec": data.get('tavg_dec'),
-        },
-        "Degree Days": {
-            "hdd10.0_annual": data.get('hdd10.0_annual'),
-            "hdd18.3_annual": data.get('hdd18.3_annual'),
-            "cdd10.0_annual": data.get('cdd10.0_annual'),
-            "cdd18.3_annual": data.get('cdd18.3_annual'),
-            "cdh_23.3_annual": data.get('cdh_23.3_annual'),
-            "cdh_26.7_annual": data.get('cdh_26.7_annual'),
-        },
-        "Wind Conditions": {
-            "coldest_month_WS/MSDB_0.4_WS": data.get('coldest_month_WS/MSDB_0.4_WS'),
-            "coldest_month_WS/MSDB_0.4_MCDB": data.get('coldest_month_WS/MSDB_0.4_MCDB'),
-            "coldest_month_WS/MSDB_1_WS": data.get('coldest_month_WS/MSDB_1_WS'),
-            "coldest_month_WS/MSDB_1_MCDB": data.get('coldest_month_WS/MSDB_1_MCDB'),
-            "extreme_annual_WS_1": data.get('extreme_annual_WS_1'),
-            "extreme_annual_WS_2.5": data.get('extreme_annual_WS_2.5'),
-            "extreme_annual_WS_5": data.get('extreme_annual_WS_5'),
-        }
-    }
-    
-    return categories
 
 def display_station_data_in_pdf_format(data: Dict):
     """Display station data in a format similar to the PDF"""
@@ -422,7 +340,7 @@ def display_station_data_in_pdf_format(data: Dict):
 def main():
     # Header
     st.markdown('<h1 class="main-header">🌤️ ASHRAE Meteo Station Finder</h1>', unsafe_allow_html=True)
-    st.markdown("Find weather stations and access ASHRAE meteorological data for any location.")
+    st.markdown("Find weather stations and access ASHRAE 2021 meteorological data for any location.")
     
     # Initialize session state
     if 'stations' not in st.session_state:
@@ -455,22 +373,10 @@ def main():
                 help="Enter longitude (-180 to 180)"
             )
         
-        # Number of stations
-        num_stations = st.slider(
-            "Number of Stations to Show",
-            min_value=1,
-            max_value=20,
-            value=10,
-            help="Number of nearest stations to display"
-        )
-        
-        # ASHRAE version
-        ashrae_version = st.selectbox(
-            "ASHRAE Version",
-            options=[2017, 2013, 2009],
-            index=0,
-            help="Select ASHRAE version for data"
-        )
+        # Display fixed settings
+        st.markdown("### Settings")
+        st.info(f"**Number of Stations:** 10 (fixed)")
+        st.info(f"**ASHRAE Version:** 2021 (fixed)")
         
         # Unit system
         unit_system = st.radio(
@@ -483,7 +389,7 @@ def main():
         # Find stations button
         if st.button("🔍 Find Nearest Stations", type="primary", use_container_width=True):
             with st.spinner("Searching for stations..."):
-                stations = get_nearest_stations(latitude, longitude, num_stations)
+                stations = get_nearest_stations(latitude, longitude, num_stations=10)
                 if stations:
                     st.session_state.stations = stations
                     st.success(f"Found {len(stations)} stations!")
@@ -499,7 +405,7 @@ def main():
         
         if st.session_state.stations:
             # Display station table
-            st.markdown('<h2 class="sub-header">📊 Nearest Weather Stations</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 class="sub-header">📊 Nearest Weather Stations (Top 10)</h2>', unsafe_allow_html=True)
             
             # Format and display table
             stations_df = format_station_table(st.session_state.stations)
@@ -559,7 +465,7 @@ def main():
             # Button to load station data
             if st.button("📥 Load Station Data", type="secondary", use_container_width=True):
                 with st.spinner("Loading station data..."):
-                    station_data = get_station_data(wmo_code, ashrae_version, unit_system)
+                    station_data = get_station_data(wmo_code, ashrae_version=2021, si_ip=unit_system)
                     if station_data:
                         st.session_state.selected_station_data = station_data
                         st.success("Station data loaded successfully!")
@@ -569,7 +475,7 @@ def main():
     # Display station data if available
     if st.session_state.selected_station_data:
         st.markdown("---")
-        st.markdown('<h2 class="sub-header">📋 Station Meteorological Data</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 class="sub-header">📋 Station Meteorological Data (ASHRAE 2021)</h2>', unsafe_allow_html=True)
         
         # Display the data in PDF-like format
         display_station_data_in_pdf_format(st.session_state.selected_station_data)
@@ -584,7 +490,7 @@ def main():
             st.download_button(
                 label="📥 Download as JSON",
                 data=json_data,
-                file_name=f"ashrae_data_{wmo_code}.json",
+                file_name=f"ashrae_2021_data_{wmo_code}.json",
                 mime="application/json",
                 use_container_width=True
             )
@@ -595,6 +501,51 @@ def main():
             import io
             
             # Create CSV from categorized data
+            def categorize_station_data(data: Dict) -> Dict:
+                """Categorize station data into logical groups"""
+                if not data:
+                    return {}
+                
+                categories = {
+                    "Station Information": {
+                        "place": data.get('place'),
+                        "wmo": data.get('wmo'),
+                        "lat": data.get('lat'),
+                        "long": data.get('long'),
+                        "elev": data.get('elev'),
+                        "country": data.get('country'),
+                        "state": data.get('state'),
+                        "period": data.get('period'),
+                        "time_zone": data.get('time_zone'),
+                        "coldest_month": data.get('coldest_month'),
+                        "hottest_month": data.get('hottest_month'),
+                    },
+                    "Heating Design Conditions": {
+                        "heating_DB_99.6": data.get('heating_DB_99.6'),
+                        "heating_DB_99": data.get('heating_DB_99'),
+                    },
+                    "Cooling Design Conditions": {
+                        "cooling_DB_MCWB_0.4_DB": data.get('cooling_DB_MCWB_0.4_DB'),
+                        "cooling_DB_MCWB_0.4_MCWB": data.get('cooling_DB_MCWB_0.4_MCWB'),
+                        "cooling_DB_MCWB_1_DB": data.get('cooling_DB_MCWB_1_DB'),
+                        "cooling_DB_MCWB_1_MCWB": data.get('cooling_DB_MCWB_1_MCWB'),
+                        "cooling_DB_MCWB_2_DB": data.get('cooling_DB_MCWB_2_DB'),
+                        "cooling_DB_MCWB_2_MCWB": data.get('cooling_DB_MCWB_2_MCWB'),
+                    },
+                    "Extreme Temperatures": {
+                        "n-year_return_period_values_of_extreme_DB_50_min": data.get('n-year_return_period_values_of_extreme_DB_50_min'),
+                        "n-year_return_period_values_of_extreme_DB_50_max": data.get('n-year_return_period_values_of_extreme_DB_50_max'),
+                    },
+                    "Monthly Average Temperatures": {
+                        "tavg_annual": data.get('tavg_annual'),
+                    },
+                    "Degree Days": {
+                        "hdd18.3_annual": data.get('hdd18.3_annual'),
+                        "cdd10.0_annual": data.get('cdd10.0_annual'),
+                    }
+                }
+                return categories
+            
             categorized = categorize_station_data(st.session_state.selected_station_data)
             csv_data = io.StringIO()
             writer = csv.writer(csv_data)
@@ -628,7 +579,7 @@ def main():
             st.download_button(
                 label="📊 Download as CSV",
                 data=csv_data.getvalue(),
-                file_name=f"ashrae_summary_{wmo_code}.csv",
+                file_name=f"ashrae_2021_summary_{wmo_code}.csv",
                 mime="text/csv",
                 use_container_width=True
             )
@@ -637,8 +588,9 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style='text-align: center; color: #6B7280;'>
-        <p>ASHRAE Meteo Data v3.0 | Data provided by ashrae-meteo.info</p>
-        <p>This tool retrieves ASHRAE meteorological design conditions for HVAC system design</p>
+        <p>ASHRAE 2021 Meteo Data v3.0 | Data provided by ashrae-meteo.info</p>
+        <p>This tool retrieves ASHRAE 2021 meteorological design conditions for HVAC system design</p>
+        <p><strong>Fixed Settings:</strong> Always shows 10 nearest stations | Always uses ASHRAE 2021 version</p>
     </div>
     """, unsafe_allow_html=True)
 
