@@ -278,14 +278,14 @@ def display_station_data_in_pdf_format(data: Dict):
     extreme_db_data = {
         "": ["Extreme Annual Mean", "5-year", "10-year", "20-year", "50-year"],
         "Minimum (°C)": [
-            data.get('extreme_annual_DB_mean_min', 'N/A),
+            data.get('extreme_annual_DB_mean_min', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_5_min', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_10_min', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_20_min', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A')
         ],
         "Maximum (°C)": [
-            data.get('extreme_annual_DB_mean_max', 'N/A),
+            data.get('extreme_annual_DB_mean_max', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_5_max', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_10_max', 'N/A'),
             data.get('n-year_return_period_values_of_extreme_DB_20_max', 'N/A'),
