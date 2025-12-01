@@ -762,17 +762,13 @@ def main():
     st.markdown("---")
     st.markdown("### 📥 Export Data")
 
-    # Create CSV export
-    if st.button("📊 Export All Data to CSV", type="secondary", width='stretch'):
-        csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
-        # Create download button for CSV
-        st.download_button(
-            label="⬇️ Download CSV",
-            data=csv_content,
-            file_name=f"ashrae_station_{wmo_code}_data.csv",
-            mime="text/csv",
-            width='stretch'
-        )
+    st.download_button(
+        label="📊 Download All Data as CSV",
+        data=csv_content,
+        file_name=f"ashrae_station_{wmo_code}_data.csv",
+        mime="text/csv",
+        width='stretch'
+    )
     
     # Footer
     st.markdown("---")
