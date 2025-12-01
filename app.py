@@ -756,32 +756,31 @@ def main():
         # Display the data in PDF-like format
         display_station_data_in_pdf_format(st.session_state.selected_station_data)
         
-        # Replace the download button section with this:
+    # Replace the download button section with this:
 
-# Add download button at the bottom
-st.markdown("---")
-st.markdown("### 📥 Export Data")
+    # Add download button at the bottom
+    st.markdown("---")
+    st.markdown("### 📥 Export Data")
 
-# Create CSV export
-if st.button("📊 Export All Data to CSV", type="secondary", width='stretch'):
-    csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
+    # Create CSV export
+    if st.button("📊 Export All Data to CSV", type="secondary", width='stretch'):
+        csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
+        # Create download button for CSV
+        st.download_button(
+            label="⬇️ Download CSV",
+            data=csv_content,
+            file_name=f"ashrae_station_{wmo_code}_data.csv",
+            mime="text/csv",
+            width='stretch'
+        )
     
-    # Create download button for CSV
-    st.download_button(
-        label="⬇️ Download CSV",
-        data=csv_content,
-        file_name=f"ashrae_station_{wmo_code}_data.csv",
-        mime="text/csv",
-        width='stretch'
-    )
-    
-    # Show preview
-    with st.expander("📋 CSV Preview"):
-        # Display first 20 lines of CSV
-        lines = csv_content.split('\n')
-        st.text('\n'.join(lines[:20]))
-        if len(lines) > 20:
-            st.text(f"... and {len(lines) - 20} more lines")
+        # Show preview
+        with st.expander("📋 CSV Preview"):
+            # Display first 20 lines of CSV
+            lines = csv_content.split('\n')
+            st.text('\n'.join(lines[:20]))
+            if len(lines) > 20:
+                st.text(f"... and {len(lines) - 20} more lines")
     
     # Footer
     st.markdown("---")
