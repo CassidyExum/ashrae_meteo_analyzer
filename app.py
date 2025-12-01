@@ -296,7 +296,7 @@ def display_station_data_in_pdf_format(data: Dict):
     
     # Table 4: Monthly Average Temperatures
     st.markdown("---")
-    st.markdown("### 📅 Monthly Average Temperatures (°C)")
+    st.markdown("### Dry Bulb Average Monthly Temperatures (°C)")
     monthly_data = {
         "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -332,76 +332,48 @@ def display_station_data_in_pdf_format(data: Dict):
     st.table(pd.DataFrame(monthly_data))
     st.metric("Annual Average Temperature", f"{data.get('dbavg_annual', data.get('tavg_annual', 'N/A'))}°C")
 
-    # Table 6: Monthly Design Dry Bulb Temperatures 0.4%
+    # Table 5: Monthly Design Dry Bulb Temperatures 0.4%
     st.markdown("---")
-    st.markdown("### 📅 Monthly Average Temperatures (°C)")
+    st.markdown("### Monthly Design Dry Bulb Temperatures 0.4% (°C)")
     monthly_db_04_data = {
         "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         "Avg Temp (°C)": [
             data.get('0.4_DB_jan', 'N/A'),
-            data.get('dbavg_feb', data.get('0.4_DB_feb', 'N/A')),
-            data.get('dbavg_mar', data.get('0.4_DB_mar', 'N/A')),
-            data.get('dbavg_apr', data.get('0.4_DB_apr', 'N/A')),
-            data.get('dbavg_may', data.get('0.4_DB_may', 'N/A')),
-            data.get('dbavg_jun', data.get('0.4_DB_jun', 'N/A')),
-            data.get('dbavg_jul', data.get('0.4_DB_jul', 'N/A')),
-            data.get('dbavg_aug', data.get('0.4_DB_aug', 'N/A')),
-            data.get('dbavg_sep', data.get('0.4_DB_sep', 'N/A')),
-            data.get('dbavg_oct', data.get('0.4_DB_oct', 'N/A')),
-            data.get('dbavg_nov', data.get('0.4_DB_nov', 'N/A')),
-            data.get('dbavg_dec', data.get('0.4_DB_dec', 'N/A'))
-        ],
-        "Std Dev (°C)": [
-            data.get('dbstd_jan', data.get('sd_jan', 'N/A')),
-            data.get('dbstd_feb', data.get('sd_feb', 'N/A')),
-            data.get('dbstd_mar', data.get('sd_mar', 'N/A')),
-            data.get('dbstd_apr', data.get('sd_apr', 'N/A')),
-            data.get('dbstd_may', data.get('sd_may', 'N/A')),
-            data.get('dbstd_jun', data.get('sd_jun', 'N/A')),
-            data.get('dbstd_jul', data.get('sd_jul', 'N/A')),
-            data.get('dbstd_aug', data.get('sd_aug', 'N/A')),
-            data.get('dbstd_sep', data.get('sd_sep', 'N/A')),
-            data.get('dbstd_oct', data.get('sd_oct', 'N/A')),
-            data.get('dbstd_nov', data.get('sd_nov', 'N/A')),
-            data.get('dbstd_dec', data.get('sd_dec', 'N/A'))
+            data.get('0.4_DB_feb', 'N/A'),
+            data.get('0.4_DB_mar', 'N/A'),
+            data.get('0.4_DB_apr', 'N/A'),
+            data.get('0.4_DB_may', 'N/A'),
+            data.get('0.4_DB_jun', 'N/A'),
+            data.get('0.4_DB_jul', 'N/A'),
+            data.get('0.4_DB_aug', 'N/A'),
+            data.get('0.4_DB_sep', 'N/A'),
+            data.get('0.4_DB_oct', 'N/A'),
+            data.get('0.4_DB_nov', 'N/A'),
+            data.get('0.4_DB_dec', 'N/A')
         ]
     }
     st.table(pd.DataFrame(monthly_db_04_data))
 
      # Table 7: Monthly Design Dry Bulb Temperatures 2%
     st.markdown("---")
-    st.markdown("### 📅 Monthly Average Temperatures (°C)")
+    st.markdown("### Monthly Design Dry Bulb Temperatures 2% (°C)")
     monthly_db_2_data = {
         "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         "Avg Temp (°C)": [
-            data.get('dbavg_jan', data.get('tavg_jan', 'N/A')),
-            data.get('dbavg_feb', data.get('tavg_feb', 'N/A')),
-            data.get('dbavg_mar', data.get('tavg_mar', 'N/A')),
-            data.get('dbavg_apr', data.get('tavg_apr', 'N/A')),
-            data.get('dbavg_may', data.get('tavg_may', 'N/A')),
-            data.get('dbavg_jun', data.get('tavg_jun', 'N/A')),
-            data.get('dbavg_jul', data.get('tavg_jul', 'N/A')),
-            data.get('dbavg_aug', data.get('tavg_aug', 'N/A')),
-            data.get('dbavg_sep', data.get('tavg_sep', 'N/A')),
-            data.get('dbavg_oct', data.get('tavg_oct', 'N/A')),
-            data.get('dbavg_nov', data.get('tavg_nov', 'N/A')),
-            data.get('dbavg_dec', data.get('tavg_dec', 'N/A'))
-        ],
-        "Std Dev (°C)": [
-            data.get('dbstd_jan', data.get('sd_jan', 'N/A')),
-            data.get('dbstd_feb', data.get('sd_feb', 'N/A')),
-            data.get('dbstd_mar', data.get('sd_mar', 'N/A')),
-            data.get('dbstd_apr', data.get('sd_apr', 'N/A')),
-            data.get('dbstd_may', data.get('sd_may', 'N/A')),
-            data.get('dbstd_jun', data.get('sd_jun', 'N/A')),
-            data.get('dbstd_jul', data.get('sd_jul', 'N/A')),
-            data.get('dbstd_aug', data.get('sd_aug', 'N/A')),
-            data.get('dbstd_sep', data.get('sd_sep', 'N/A')),
-            data.get('dbstd_oct', data.get('sd_oct', 'N/A')),
-            data.get('dbstd_nov', data.get('sd_nov', 'N/A')),
-            data.get('dbstd_dec', data.get('sd_dec', 'N/A'))
+            data.get('2_DB_jan', 'N/A'),
+            data.get('2_DB_feb', 'N/A'),
+            data.get('2_DB_mar', 'N/A'),
+            data.get('2_DB_apr', 'N/A'),
+            data.get('2_DB_may', 'N/A'),
+            data.get('2_DB_jun', 'N/A'),
+            data.get('2_DB_jul', 'N/A'),
+            data.get('2_DB_aug', 'N/A'),
+            data.get('2_DB_sep', 'N/A'),
+            data.get('2_DB_oct', 'N/A'),
+            data.get('2_DB_nov', 'N/A'),
+            data.get('2_DB_dec', 'N/A')
         ]
     }
     st.table(pd.DataFrame(monthly_db_2_data))
