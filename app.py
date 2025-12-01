@@ -441,7 +441,7 @@ def main():
                 "Latitude",
                 min_value=-90.0,
                 max_value=90.0,
-                value=44.84,
+                value=00.00,
                 format="%.4f",
                 help="Enter latitude (-90 to 90)"
             )
@@ -450,7 +450,7 @@ def main():
                 "Longitude",
                 min_value=-180.0,
                 max_value=180.0,
-                value=-91.74,
+                value=00.00,
                 format="%.4f",
                 help="Enter longitude (-180 to 180)"
             )
