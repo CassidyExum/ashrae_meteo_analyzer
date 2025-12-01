@@ -46,6 +46,13 @@ st.markdown("""
         margin: 0.5rem 0;
         border: 1px solid #BFDBFE;
     }
+    .logo-container {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .logo-img {
+        max-height: 80px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
