@@ -411,7 +411,7 @@ def main():
             stations_df = format_station_table(st.session_state.stations)
             
             st.dataframe(
-                styled_df,
+                stations_df,
                 use_container_width=True,
                 hide_index=True,
                 column_config={
