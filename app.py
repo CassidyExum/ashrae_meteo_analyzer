@@ -206,12 +206,13 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
     return pd.DataFrame(table_data)
 
 def display_station_data_in_pdf_format(data: Dict):
-    """Display station data in a format similar to the PDF"""
+    """Display station data in organized tables"""
     if not data:
         st.warning("No station data available")
         return
     
-    # Display basic station info in a card
+    # Display basic station info
+    st.markdown("### 📍 Station Information")
     with st.container():
         col1, col2, col3, col4 = st.columns(4)
         
@@ -223,7 +224,7 @@ def display_station_data_in_pdf_format(data: Dict):
         # Convert elevation to feet if available
         elev_m = data.get('elev', 'N/A')
         elev_ft = 'N/A'
-        if elev_m != 'N/A':
+        if elev_m != 'N/A' and elev_m:
             try:
                 elev_ft = int(float(elev_m) * 3.28084)
             except:
@@ -232,198 +233,317 @@ def display_station_data_in_pdf_format(data: Dict):
         with col3:
             st.metric("Elevation", f"{elev_ft} ft ({elev_m} m)")
         with col4:
-            st.metric("Period", data.get('period', 'N/A'))
+            st.metric("Data Period", data.get('period', 'N/A'))
     
-    st.divider()
+    # Table 1: Location & Basic Info
+    st.markdown("---")
+    st.markdown("### 📋 Location & Basic Information")
+    location_data = {
+        "Parameter": [
+            "Latitude", "Longitude", "Country", "State/Region",
+            "Time Zone", "Climate Zone", "Coldest Month", "Hottest Month",
+            "Standard Pressure", "WBAN Code", "Warm Humid Location"
+        ],
+        "Value": [
+            f"{data.get('lat', 'N/A')}°",
+            f"{data.get('long', 'N/A')}°",
+            data.get('country', 'N/A'),
+            data.get('state', 'N/A'),
+            f"UTC{data.get('time_zone', 'N/A')}",
+            data.get('climate_zone', 'N/A'),
+            data.get('coldest_month', 'N/A'),
+            data.get('hottest_month', 'N/A'),
+            f"{data.get('stdp', 'N/A')} kPa",
+            data.get('wban', 'N/A'),
+            "Yes" if data.get('warm_humid_location') == '1' else "No"
+        ]
+    }
+    st.table(pd.DataFrame(location_data))
     
-    # Create tabs for different data categories
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "📋 Station Info",
-        "🔥 Heating Design",
-        "❄️ Cooling Design",
-        "🌡️ Extreme Temps",
-        "📅 Monthly Averages",
-        "📊 Degree Days",
-        "💨 Wind & Solar"
-    ])
+    # Table 2: Heating Design Conditions
+    st.markdown("---")
+    st.markdown("### 🔥 Heating Design Conditions")
+    heating_data = {
+        "Design Condition": [
+            "Heating DB 99.6%",
+            "Heating DB 99%",
+            "Humidification DP/MCDB & HR 99.6% DP",
+            "Humidification DP/MCDB & HR 99.6% HR",
+            "Humidification DP/MCDB & HR 99.6% MCDB",
+            "Humidification DP/MCDB & HR 99% DP",
+            "Humidification DP/MCDB & HR 99% HR",
+            "Humidification DP/MCDB & HR 99% MCDB"
+        ],
+        "Value": [
+            f"{data.get('heating_DB_99.6', 'N/A')}°C",
+            f"{data.get('heating_DB_99', 'N/A')}°C",
+            f"{data.get('humidification_DP/MCDB_and_HR_99.6_DP', 'N/A')}°C",
+            f"{data.get('humidification_DP/MCDB_and_HR_99.6_HR', 'N/A')} g/kg",
+            f"{data.get('humidification_DP/MCDB_and_HR_99.6_MCDB', 'N/A')}°C",
+            f"{data.get('humidification_DP/MCDB_and_HR_99_DP', 'N/A')}°C",
+            f"{data.get('humidification_DP/MCDB_and_HR_99_HR', 'N/A')} g/kg",
+            f"{data.get('humidification_DP/MCDB_and_HR_99_MCDB', 'N/A')}°C"
+        ]
+    }
+    st.table(pd.DataFrame(heating_data))
     
-    # Tab 1: Station Information
-    with tab1:
-        st.subheader("Station Information")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write(f"**Location:** {data.get('lat', 'N/A')}°N, {data.get('long', 'N/A')}°E")
-            st.write(f"**Country:** {data.get('country', 'N/A')}")
-            st.write(f"**State/Region:** {data.get('state', 'N/A')}")
-            st.write(f"**Time Zone:** UTC{data.get('time_zone', 'N/A')}")
-        
-        with col2:
-            st.write(f"**Coldest Month:** {data.get('coldest_month', 'N/A')}")
-            st.write(f"**Hottest Month:** {data.get('hottest_month', 'N/A')}")
-            st.write(f"**Standard Pressure:** {data.get('stdp', 'N/A')} kPa")
-            st.write(f"**WBAN:** {data.get('wban', 'N/A')}")
+    # Table 3: Cooling Design Conditions
+    st.markdown("---")
+    st.markdown("### ❄️ Cooling Design Conditions")
+    cooling_data = {
+        "Design Condition": ["0.4%", "1%", "2%"],
+        "Dry Bulb (°C)": [
+            data.get('cooling_DB_MCWB_0.4_DB', 'N/A'),
+            data.get('cooling_DB_MCWB_1_DB', 'N/A'),
+            data.get('cooling_DB_MCWB_2_DB', 'N/A')
+        ],
+        "Mean Coincident Wet Bulb (°C)": [
+            data.get('cooling_DB_MCWB_0.4_MCWB', 'N/A'),
+            data.get('cooling_DB_MCWB_1_MCWB', 'N/A'),
+            data.get('cooling_DB_MCWB_2_MCWB', 'N/A')
+        ],
+        "Hottest Month DB Range": [
+            data.get('hottest_month_DB_range', 'N/A'),
+            data.get('hottest_month_DB_range', 'N/A'),
+            data.get('hottest_month_DB_range', 'N/A')
+        ]
+    }
+    st.table(pd.DataFrame(cooling_data))
     
-    # Tab 2: Heating Design Conditions
-    with tab2:
-        st.subheader("Heating Design Conditions")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.metric("Heating DB 99.6%", f"{data.get('heating_DB_99.6', 'N/A')}°C")
-            st.metric("Heating DB 99%", f"{data.get('heating_DB_99', 'N/A')}°C")
-        
-        with col2:
-            st.write(f"**Humidification DP/MCDB & HR 99.6% DP:** {data.get('humidification_DP/MCDB_and_HR_99.6_DP', 'N/A')}°C")
-            st.write(f"**Humidification DP/MCDB & HR 99.6% HR:** {data.get('humidification_DP/MCDB_and_HR_99.6_HR', 'N/A')} g/kg")
-            st.write(f"**Humidification DP/MCDB & HR 99.6% MCDB:** {data.get('humidification_DP/MCDB_and_HR_99.6_MCDB', 'N/A')}°C")
+    # Table 4: Extreme Temperatures
+    st.markdown("---")
+    st.markdown("### 🌡️ Extreme Temperatures (Dry Bulb)")
+    extreme_db_data = {
+        "Return Period": ["5-year", "10-year", "20-year", "50-year"],
+        "Minimum (°C)": [
+            data.get('n-year_return_period_values_of_extreme_DB_5_min', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_10_min', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_20_min', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A')
+        ],
+        "Maximum (°C)": [
+            data.get('n-year_return_period_values_of_extreme_DB_5_max', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_10_max', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_20_max', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_50_max', 'N/A')
+        ]
+    }
+    st.table(pd.DataFrame(extreme_db_data))
     
-    # Tab 3: Cooling Design Conditions
-    with tab3:
-        st.subheader("Cooling Design Conditions")
-        
-        # Create a table for cooling conditions
-        cooling_data = {
-            "Design Condition": ["0.4%", "1%", "2%"],
-            "Dry Bulb (°C)": [
-                data.get('cooling_DB_MCWB_0.4_DB', 'N/A'),
-                data.get('cooling_DB_MCWB_1_DB', 'N/A'),
-                data.get('cooling_DB_MCWB_2_DB', 'N/A')
-            ],
-            "Mean Coincident Wet Bulb (°C)": [
-                data.get('cooling_DB_MCWB_0.4_MCWB', 'N/A'),
-                data.get('cooling_DB_MCWB_1_MCWB', 'N/A'),
-                data.get('cooling_DB_MCWB_2_MCWB', 'N/A')
-            ]
-        }
-        
-        st.table(pd.DataFrame(cooling_data))
-        
-        st.write(f"**Hottest Month DB Range:** {data.get('hottest_month_DB_range', 'N/A')}°C")
-    
-    # Tab 4: Extreme Temperatures
-    with tab4:
-        st.subheader("Extreme Temperatures")
-        
-        # Extreme temperatures table
-        extreme_data = {
+    # Table 5: Extreme Wet Bulb Temperatures
+    if data.get('n-year_return_period_values_of_extreme_WB_5_min'):
+        st.markdown("---")
+        st.markdown("### 🌡️ Extreme Temperatures (Wet Bulb)")
+        extreme_wb_data = {
             "Return Period": ["5-year", "10-year", "20-year", "50-year"],
             "Minimum (°C)": [
-                data.get('n-year_return_period_values_of_extreme_DB_5_min', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_10_min', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_20_min', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A')
+                data.get('n-year_return_period_values_of_extreme_WB_5_min', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_10_min', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_20_min', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_50_min', 'N/A')
             ],
             "Maximum (°C)": [
-                data.get('n-year_return_period_values_of_extreme_DB_5_max', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_10_max', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_20_max', 'N/A'),
-                data.get('n-year_return_period_values_of_extreme_DB_50_max', 'N/A')
+                data.get('n-year_return_period_values_of_extreme_WB_5_max', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_10_max', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_20_max', 'N/A'),
+                data.get('n-year_return_period_values_of_extreme_WB_50_max', 'N/A')
             ]
         }
-        
-        st.table(pd.DataFrame(extreme_data))
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"**Extreme Max WB:** {data.get('extreme_max_WB', 'N/A')}°C")
-            st.write(f"**Mean Annual Min DB:** {data.get('extreme_annual_DB_mean_min', 'N/A')}°C")
-        with col2:
-            st.write(f"**Mean Annual Max DB:** {data.get('extreme_annual_DB_mean_max', 'N/A')}°C")
-            st.write(f"**Std Dev Min DB:** {data.get('extreme_annual_DB_standard_deviation_min', 'N/A')}°C")
-            st.write(f"**Std Dev Max DB:** {data.get('extreme_annual_DB_standard_deviation_max', 'N/A')}°C")
+        st.table(pd.DataFrame(extreme_wb_data))
     
-    # Tab 5: Monthly Averages
-    with tab5:
-        st.subheader("Monthly Average Temperatures (°C)")
-        
-        # Create monthly averages table
-        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        
-        monthly_data = {
-            "Month": months,
-            "Avg Temp (°C)": [
-                data.get('tavg_jan', 'N/A'),
-                data.get('tavg_feb', 'N/A'),
-                data.get('tavg_mar', 'N/A'),
-                data.get('tavg_apr', 'N/A'),
-                data.get('tavg_may', 'N/A'),
-                data.get('tavg_jun', 'N/A'),
-                data.get('tavg_jul', 'N/A'),
-                data.get('tavg_aug', 'N/A'),
-                data.get('tavg_sep', 'N/A'),
-                data.get('tavg_oct', 'N/A'),
-                data.get('tavg_nov', 'N/A'),
-                data.get('tavg_dec', 'N/A')
-            ],
-            "Std Dev (°C)": [
-                data.get('sd_jan', 'N/A'),
-                data.get('sd_feb', 'N/A'),
-                data.get('sd_mar', 'N/A'),
-                data.get('sd_apr', 'N/A'),
-                data.get('sd_may', 'N/A'),
-                data.get('sd_jun', 'N/A'),
-                data.get('sd_jul', 'N/A'),
-                data.get('sd_aug', 'N/A'),
-                data.get('sd_sep', 'N/A'),
-                data.get('sd_oct', 'N/A'),
-                data.get('sd_nov', 'N/A'),
-                data.get('sd_dec', 'N/A')
+    # Table 6: Monthly Average Temperatures
+    st.markdown("---")
+    st.markdown("### 📅 Monthly Average Temperatures (°C)")
+    monthly_data = {
+        "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "Avg Temp (°C)": [
+            data.get('dbavg_jan', data.get('tavg_jan', 'N/A')),
+            data.get('dbavg_feb', data.get('tavg_feb', 'N/A')),
+            data.get('dbavg_mar', data.get('tavg_mar', 'N/A')),
+            data.get('dbavg_apr', data.get('tavg_apr', 'N/A')),
+            data.get('dbavg_may', data.get('tavg_may', 'N/A')),
+            data.get('dbavg_jun', data.get('tavg_jun', 'N/A')),
+            data.get('dbavg_jul', data.get('tavg_jul', 'N/A')),
+            data.get('dbavg_aug', data.get('tavg_aug', 'N/A')),
+            data.get('dbavg_sep', data.get('tavg_sep', 'N/A')),
+            data.get('dbavg_oct', data.get('tavg_oct', 'N/A')),
+            data.get('dbavg_nov', data.get('tavg_nov', 'N/A')),
+            data.get('dbavg_dec', data.get('tavg_dec', 'N/A'))
+        ],
+        "Std Dev (°C)": [
+            data.get('dbstd_jan', data.get('sd_jan', 'N/A')),
+            data.get('dbstd_feb', data.get('sd_feb', 'N/A')),
+            data.get('dbstd_mar', data.get('sd_mar', 'N/A')),
+            data.get('dbstd_apr', data.get('sd_apr', 'N/A')),
+            data.get('dbstd_may', data.get('sd_may', 'N/A')),
+            data.get('dbstd_jun', data.get('sd_jun', 'N/A')),
+            data.get('dbstd_jul', data.get('sd_jul', 'N/A')),
+            data.get('dbstd_aug', data.get('sd_aug', 'N/A')),
+            data.get('dbstd_sep', data.get('sd_sep', 'N/A')),
+            data.get('dbstd_oct', data.get('sd_oct', 'N/A')),
+            data.get('dbstd_nov', data.get('sd_nov', 'N/A')),
+            data.get('dbstd_dec', data.get('sd_dec', 'N/A'))
+        ]
+    }
+    st.table(pd.DataFrame(monthly_data))
+    st.metric("Annual Average Temperature", f"{data.get('dbavg_annual', data.get('tavg_annual', 'N/A'))}°C")
+    
+    # Table 7: Degree Days
+    st.markdown("---")
+    st.markdown("### 📊 Degree Days")
+    
+    # Create two columns for degree days
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        degree_days_data = {
+            "Type": ["HDD 10.0°C", "HDD 18.3°C", "CDD 10.0°C", "CDD 18.3°C"],
+            "Annual Total": [
+                data.get('hdd10.0_annual', 'N/A'),
+                data.get('hdd18.3_annual', 'N/A'),
+                data.get('cdd10.0_annual', 'N/A'),
+                data.get('cdd18.3_annual', 'N/A')
             ]
         }
-        
-        st.table(pd.DataFrame(monthly_data))
-        st.metric("Annual Average Temperature", f"{data.get('tavg_annual', 'N/A')}°C")
+        st.table(pd.DataFrame(degree_days_data))
     
-    # Tab 6: Degree Days
-    with tab6:
-        st.subheader("Degree Days")
-        
-        # Degree days metrics
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("HDD 10.0°C", f"{data.get('hdd10.0_annual', 'N/A')} °C-days")
-        with col2:
-            st.metric("HDD 18.3°C", f"{data.get('hdd18.3_annual', 'N/A')} °C-days")
-        with col3:
-            st.metric("CDD 10.0°C", f"{data.get('cdd10.0_annual', 'N/A')} °C-days")
-        with col4:
-            st.metric("CDD 18.3°C", f"{data.get('cdd18.3_annual', 'N/A')} °C-days")
-        
-        st.write(f"**CDH 23.3°C:** {data.get('cdh_23.3_annual', 'N/A')} °C-hours")
-        st.write(f"**CDH 26.7°C:** {data.get('cdh_26.7_annual', 'N/A')} °C-hours")
-        st.write(f"**Hours 8-4 & 12.8/20.6°C:** {data.get('hours_8_to_4_and_12.8/20.6', 'N/A')} hours")
+    with col2:
+        degree_hours_data = {
+            "Type": ["CDH 23.3°C", "CDH 26.7°C"],
+            "Annual Total": [
+                data.get('cdh_23.3_annual', 'N/A'),
+                data.get('cdh_26.7_annual', 'N/A')
+            ]
+        }
+        st.table(pd.DataFrame(degree_hours_data))
     
-    # Tab 7: Wind and Solar
-    with tab7:
-        st.subheader("Wind and Solar Conditions")
+    # Table 8: Wind Conditions
+    st.markdown("---")
+    st.markdown("### 💨 Wind Conditions")
+    wind_data = {
+        "Parameter": [
+            "Coldest Month WS/MSDB 0.4% WS",
+            "Coldest Month WS/MSDB 0.4% MCDB",
+            "Coldest Month WS/MSDB 1% WS",
+            "Coldest Month WS/MSDB 1% MCDB",
+            "MCWS/PCWD to 99.6% DB MCWS",
+            "MCWS/PCWD to 99.6% DB PCWD",
+            "MCWS/PCWD to 0.4% DB MCWS",
+            "MCWS/PCWD to 0.4% DB PCWD",
+            "Annual Average Wind Speed",
+            "Extreme Annual WS (1-year)",
+            "Extreme Annual WS (2.5-year)",
+            "Extreme Annual WS (5-year)"
+        ],
+        "Value": [
+            f"{data.get('coldest_month_WS/MSDB_0.4_WS', 'N/A')} m/s",
+            f"{data.get('coldest_month_WS/MSDB_0.4_MCDB', 'N/A')}°C",
+            f"{data.get('coldest_month_WS/MSDB_1_WS', 'N/A')} m/s",
+            f"{data.get('coldest_month_WS/MSDB_1_MCDB', 'N/A')}°C",
+            f"{data.get('MCWS/PCWD_to_99.6_DB_MCWS', 'N/A')} m/s",
+            f"{data.get('MCWS/PCWD_to_99.6_DB_PCWD', 'N/A')}°",
+            f"{data.get('MCWS_PCWD_to_0.4_DB_MCWS', 'N/A')} m/s",
+            f"{data.get('MCWS_PCWD_to_0.4_DB_PCWD', 'N/A')}°",
+            f"{data.get('wsavg_annual', 'N/A')} m/s",
+            f"{data.get('extreme_annual_WS_1', 'N/A')} m/s",
+            f"{data.get('extreme_annual_WS_2.5', 'N/A')} m/s",
+            f"{data.get('extreme_annual_WS_5', 'N/A')} m/s"
+        ]
+    }
+    st.table(pd.DataFrame(wind_data))
+    
+    # Table 9: Precipitation
+    st.markdown("---")
+    st.markdown("### 🌧️ Precipitation")
+    if data.get('precavg_annual'):
+        precip_data = {
+            "Parameter": ["Annual Average", "Annual Maximum", "Annual Minimum", "Annual Std Dev"],
+            "Precipitation (mm)": [
+                data.get('precavg_annual', 'N/A'),
+                data.get('precmax_annual', 'N/A'),
+                data.get('precmin_annual', 'N/A'),
+                data.get('precstd_annual', 'N/A')
+            ]
+        }
+        st.table(pd.DataFrame(precip_data))
+    
+    # Table 10: Solar Radiation
+    st.markdown("---")
+    st.markdown("### ☀️ Solar Conditions")
+    if data.get('taub_jan'):
+        # Create tabs for different solar data
+        solar_tab1, solar_tab2 = st.tabs(["Optical Depth", "Solar Irradiance"])
         
-        col1, col2 = st.columns(2)
+        with solar_tab1:
+            optical_depth_data = {
+                "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                "Beam (τb)": [
+                    data.get('taub_jan', 'N/A'),
+                    data.get('taub_feb', 'N/A'),
+                    data.get('taub_mar', 'N/A'),
+                    data.get('taub_apr', 'N/A'),
+                    data.get('taub_may', 'N/A'),
+                    data.get('taub_jun', 'N/A'),
+                    data.get('taub_jul', 'N/A'),
+                    data.get('taub_aug', 'N/A'),
+                    data.get('taub_sep', 'N/A'),
+                    data.get('taub_oct', 'N/A'),
+                    data.get('taub_nov', 'N/A'),
+                    data.get('taub_dec', 'N/A')
+                ],
+                "Diffuse (τd)": [
+                    data.get('taud_jan', 'N/A'),
+                    data.get('taud_feb', 'N/A'),
+                    data.get('taud_mar', 'N/A'),
+                    data.get('taud_apr', 'N/A'),
+                    data.get('taud_may', 'N/A'),
+                    data.get('taud_jun', 'N/A'),
+                    data.get('taud_jul', 'N/A'),
+                    data.get('taud_aug', 'N/A'),
+                    data.get('taud_sep', 'N/A'),
+                    data.get('taud_oct', 'N/A'),
+                    data.get('taud_nov', 'N/A'),
+                    data.get('taud_dec', 'N/A')
+                ]
+            }
+            st.table(pd.DataFrame(optical_depth_data))
         
-        with col1:
-            st.write("**Wind Conditions:**")
-            st.write(f"Coldest Month WS/MSDB 0.4% WS: {data.get('coldest_month_WS/MSDB_0.4_WS', 'N/A')} m/s")
-            st.write(f"Coldest Month WS/MSDB 0.4% MCDB: {data.get('coldest_month_WS/MSDB_0.4_MCDB', 'N/A')}°C")
-            st.write(f"Coldest Month WS/MSDB 1% WS: {data.get('coldest_month_WS/MSDB_1_WS', 'N/A')} m/s")
-            st.write(f"Coldest Month WS/MSDB 1% MCDB: {data.get('coldest_month_WS/MSDB_1_MCDB', 'N/A')}°C")
-            
-            st.write(f"\n**Extreme Wind Speeds:**")
-            st.write(f"1-year return: {data.get('extreme_annual_WS_1', 'N/A')} m/s")
-            st.write(f"2.5-year return: {data.get('extreme_annual_WS_2.5', 'N/A')} m/s")
-            st.write(f"5-year return: {data.get('extreme_annual_WS_5', 'N/A')} m/s")
-        
-        with col2:
-            st.write("**Solar Conditions:**")
-            st.write(f"Clear sky optical depth (beam) - Jan: {data.get('taub_jan', 'N/A')}")
-            st.write(f"Clear sky optical depth (beam) - Jul: {data.get('taub_jul', 'N/A')}")
-            st.write(f"Clear sky optical depth (diffuse) - Jan: {data.get('taud_jan', 'N/A')}")
-            st.write(f"Clear sky optical depth (diffuse) - Jul: {data.get('taud_jul', 'N/A')}")
-            
-            st.write(f"\n**Solar Irradiance at Noon:**")
-            st.write(f"Beam normal - Jan: {data.get('ebn_noon_jan', 'N/A')} W/m²")
-            st.write(f"Diffuse horizontal - Jan: {data.get('edn_noon_jan', 'N/A')} W/m²")
+        with solar_tab2:
+            irradiance_data = {
+                "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                "Beam Normal (W/m²)": [
+                    data.get('ebn_noon_jan', 'N/A'),
+                    data.get('ebn_noon_feb', 'N/A'),
+                    data.get('ebn_noon_mar', 'N/A'),
+                    data.get('ebn_noon_apr', 'N/A'),
+                    data.get('ebn_noon_may', 'N/A'),
+                    data.get('ebn_noon_jun', 'N/A'),
+                    data.get('ebn_noon_jul', 'N/A'),
+                    data.get('ebn_noon_aug', 'N/A'),
+                    data.get('ebn_noon_sep', 'N/A'),
+                    data.get('ebn_noon_oct', 'N/A'),
+                    data.get('ebn_noon_nov', 'N/A'),
+                    data.get('ebn_noon_dec', 'N/A')
+                ],
+                "Diffuse Horizontal (W/m²)": [
+                    data.get('edn_noon_jan', 'N/A'),
+                    data.get('edn_noon_feb', 'N/A'),
+                    data.get('edn_noon_mar', 'N/A'),
+                    data.get('edn_noon_apr', 'N/A'),
+                    data.get('edn_noon_may', 'N/A'),
+                    data.get('edn_noon_jun', 'N/A'),
+                    data.get('edn_noon_jul', 'N/A'),
+                    data.get('edn_noon_aug', 'N/A'),
+                    data.get('edn_noon_sep', 'N/A'),
+                    data.get('edn_noon_oct', 'N/A'),
+                    data.get('edn_noon_nov', 'N/A'),
+                    data.get('edn_noon_dec', 'N/A')
+                ]
+            }
+            st.table(pd.DataFrame(irradiance_data))
 
 # Main App
 def main():
