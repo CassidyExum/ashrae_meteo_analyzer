@@ -420,6 +420,20 @@ def display_station_data_in_pdf_format(data: Dict):
 
 # Main App
 def main():
+    # RRC logo
+    st.markdown("""
+    <div class="logo-container">
+        <img src="https://cdn.theorg.com/0f8b4de9-d8c5-4a5a-bfb7-dfe6a539b1f7_medium.jpg" class="logo-img">
+    </div>
+    """, unsafe_allow_html=True)
+
+     # Created by section
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 1rem; color: #666; font-style: italic;">
+        Created by Cassidy Exum - BESS Engineer
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Header
     st.markdown('<h1 class="main-header">🌤️ ASHRAE Meteo Station Finder</h1>', unsafe_allow_html=True)
     st.markdown("Find weather stations and access ASHRAE 2021 meteorological data for any location.")
