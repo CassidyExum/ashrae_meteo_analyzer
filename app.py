@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 import json
 from typing import List, Dict, Optional
-import math
 
 # Set page configuration
 st.set_page_config(
@@ -78,6 +77,16 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
         for station in stations:
             radians = float(station.get('tt', 0))
             station['distance_miles'] = round(radians * 3958.8, 2)
+            # Convert elevation from meters to feet (1 meter = 3.28084 feet)
+            elev_m = station.get('elev')
+            if elev_m and elev_m != 'N/A':
+                try:
+                    elev_ft = round(float(elev_m) * 3.28084, 0)
+                    station['elevation_ft'] = int(elev_ft)
+                except:
+                    station['elevation_ft'] = 'N/A'
+            else:
+                station['elevation_ft'] = 'N/A'
         
         return stations
         
@@ -120,7 +129,7 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
             "WMO Code": station.get('wmo', 'N/A'),
             "Latitude": station.get('lat', 'N/A'),
             "Longitude": station.get('long', 'N/A'),
-            "Elevation (m)": station.get('elev', 'N/A'),
+            "Elevation (ft)": station.get('elevation_ft', 'N/A'),
             "Distance (miles)": station.get('distance_miles', 'N/A')
         })
     
@@ -140,8 +149,18 @@ def display_station_data_in_pdf_format(data: Dict):
             st.metric("Station Name", data.get('place', 'N/A'))
         with col2:
             st.metric("WMO Code", data.get('wmo', 'N/A'))
+        
+        # Convert elevation to feet if available
+        elev_m = data.get('elev', 'N/A')
+        elev_ft = 'N/A'
+        if elev_m != 'N/A':
+            try:
+                elev_ft = int(float(elev_m) * 3.28084)
+            except:
+                elev_ft = 'N/A'
+        
         with col3:
-            st.metric("Elevation", f"{data.get('elev', 'N/A')} m")
+            st.metric("Elevation", f"{elev_ft} ft ({elev_m} m)")
         with col4:
             st.metric("Period", data.get('period', 'N/A'))
     
@@ -375,8 +394,8 @@ def main():
         
         # Display fixed settings
         st.markdown("### Settings")
-        st.info(f"**Number of Stations:** 10")
-        st.info(f"**ASHRAE Version:** 2021")
+        st.info(f"**Number of Stations:** 10 (fixed)")
+        st.info(f"**ASHRAE Version:** 2021 (fixed)")
         
         # Unit system
         unit_system = st.radio(
@@ -396,64 +415,76 @@ def main():
                 else:
                     st.error("No stations found. Please try different coordinates.")
     
-    # Main content area
-    col1, col2 = st.columns([2, 1])
+    # Main content area - Single column layout
+    st.markdown('<h2 class="sub-header">📍 Your Location</h2>', unsafe_allow_html=True)
+    st.write(f"**Coordinates:** {latitude}, {longitude}")
     
-    with col1:
-        st.markdown('<h2 class="sub-header">📍 Your Location</h2>', unsafe_allow_html=True)
-        st.write(f"**Coordinates:** {latitude}, {longitude}")
+    if st.session_state.stations:
+        # Display station table
+        st.markdown('<h2 class="sub-header">📊 Nearest Weather Stations (Top 10)</h2>', unsafe_allow_html=True)
         
-        if st.session_state.stations:
-            # Display station table
-            st.markdown('<h2 class="sub-header">📊 Nearest Weather Stations (Top 10)</h2>', unsafe_allow_html=True)
-            
-            # Format and display table
-            stations_df = format_station_table(st.session_state.stations)
-            
-            st.dataframe(
-                stations_df,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "#": st.column_config.NumberColumn(width="small"),
-                    "Station Name": st.column_config.TextColumn(width="large"),
-                    "WMO Code": st.column_config.TextColumn(width="small"),
-                    "Latitude": st.column_config.NumberColumn(format="%.4f"),
-                    "Longitude": st.column_config.NumberColumn(format="%.4f"),
-                    "Elevation (m)": st.column_config.NumberColumn(format="%d"),
-                    "Distance (miles)": st.column_config.NumberColumn(format="%.2f")
-                }
-            )
-    
-    with col2:
+        # Format and display table
+        stations_df = format_station_table(st.session_state.stations)
+        
+        st.dataframe(
+            stations_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "#": st.column_config.NumberColumn(width="small"),
+                "Station Name": st.column_config.TextColumn(width="large"),
+                "WMO Code": st.column_config.TextColumn(width="small"),
+                "Latitude": st.column_config.NumberColumn(format="%.4f"),
+                "Longitude": st.column_config.NumberColumn(format="%.4f"),
+                "Elevation (ft)": st.column_config.NumberColumn(format="%d"),
+                "Distance (miles)": st.column_config.NumberColumn(format="%.2f")
+            }
+        )
+        
+        # Station selection section (moved under the table)
         st.markdown('<h2 class="sub-header">⚙️ Station Selection</h2>', unsafe_allow_html=True)
         
-        if st.session_state.stations:
-            # Create dropdown with station names
-            station_options = [f"{s.get('place', 'Unknown')} (WMO: {s.get('wmo', 'N/A')})" 
-                             for s in st.session_state.stations]
-            
-            selected_station = st.selectbox(
-                "Select a station for detailed data:",
-                options=station_options,
-                index=0,
-                help="Choose a station to view detailed meteorological data"
-            )
-            
-            # Extract WMO code from selection
-            selected_index = station_options.index(selected_station)
-            selected_station_info = st.session_state.stations[selected_index]
-            wmo_code = selected_station_info.get('wmo')
-            
-            # Show selected station info
-            with st.container():
-                st.markdown("### Selected Station")
+        # Create dropdown with station names
+        station_options = [f"{s.get('place', 'Unknown')} (WMO: {s.get('wmo', 'N/A')})" 
+                         for s in st.session_state.stations]
+        
+        selected_station = st.selectbox(
+            "Select a station for detailed data:",
+            options=station_options,
+            index=0,
+            help="Choose a station to view detailed meteorological data"
+        )
+        
+        # Extract WMO code from selection
+        selected_index = station_options.index(selected_station)
+        selected_station_info = st.session_state.stations[selected_index]
+        wmo_code = selected_station_info.get('wmo')
+        
+        # Show selected station info
+        with st.container():
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### Selected Station Info")
                 st.write(f"**Name:** {selected_station_info.get('place', 'N/A')}")
-                st.write(f"**WMO:** {wmo_code}")
+                st.write(f"**WMO Code:** {wmo_code}")
+            with col2:
                 st.write(f"**Distance:** {selected_station_info.get('distance_miles', 'N/A')} miles")
-                st.write(f"**Elevation:** {selected_station_info.get('elev', 'N/A')} m")
-            
-            # Button to load station data
+                
+                # Show elevation in both feet and meters
+                elev_ft = selected_station_info.get('elevation_ft', 'N/A')
+                elev_m = selected_station_info.get('elev', 'N/A')
+                if elev_ft != 'N/A' and elev_m != 'N/A':
+                    st.write(f"**Elevation:** {elev_ft} ft ({elev_m} m)")
+                elif elev_ft != 'N/A':
+                    st.write(f"**Elevation:** {elev_ft} ft")
+                elif elev_m != 'N/A':
+                    st.write(f"**Elevation:** {elev_m} m")
+                else:
+                    st.write(f"**Elevation:** N/A")
+        
+        # Button to load station data
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
             if st.button("📥 Load Station Data", type="secondary", use_container_width=True):
                 with st.spinner("Loading station data..."):
                     station_data = get_station_data(wmo_code, ashrae_version=2021, si_ip=unit_system)
