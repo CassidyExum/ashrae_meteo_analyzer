@@ -774,14 +774,6 @@ def main():
             width='stretch'
         )
     
-        # Show preview
-        with st.expander("📋 CSV Preview"):
-            # Display first 20 lines of CSV
-            lines = csv_content.split('\n')
-            st.text('\n'.join(lines[:20]))
-            if len(lines) > 20:
-                st.text(f"... and {len(lines) - 20} more lines")
-    
     # Footer
     st.markdown("---")
     st.markdown("""
