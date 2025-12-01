@@ -431,7 +431,7 @@ def main():
         )
         
         # Find stations button
-        if st.button("🔍 Find Nearest Stations", type="primary", use_container_width=True):
+        if st.button("🔍 Find Nearest Stations", type="primary", width='stretch'):
             with st.spinner("Searching for stations..."):
                 stations = get_nearest_stations(latitude, longitude, num_stations=10)
                 if stations:
@@ -453,7 +453,7 @@ def main():
         
         st.dataframe(
             stations_df,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config={
                 "#": st.column_config.NumberColumn(width="small"),
@@ -510,7 +510,7 @@ def main():
         # Button to load station data
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("📥 Load Station Data", type="secondary", use_container_width=True):
+            if st.button("📥 Load Station Data", type="secondary", width='stretch'):
                 with st.spinner("Loading station data..."):
                     station_data = get_station_data(wmo_code, ashrae_version=2021, si_ip=unit_system)
                     if station_data:
@@ -539,7 +539,7 @@ def main():
                 data=json_data,
                 file_name=f"ashrae_2021_data_{wmo_code}.json",
                 mime="application/json",
-                use_container_width=True
+                width='stretch'
             )
         
         with col2:
@@ -628,7 +628,7 @@ def main():
                 data=csv_data.getvalue(),
                 file_name=f"ashrae_2021_summary_{wmo_code}.csv",
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
     
     # Footer
