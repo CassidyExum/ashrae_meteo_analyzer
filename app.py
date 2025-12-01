@@ -454,6 +454,142 @@ def display_station_data_in_pdf_format(data: Dict):
                 ]
             }
             st.table(pd.DataFrame(irradiance_data))
+def export_station_data_to_csv(data: Dict) -> str:
+    """Export all displayed station data to CSV format matching the display"""
+    if not data:
+        return ""
+    
+    import csv
+    import io
+    
+    csv_data = io.StringIO()
+    writer = csv.writer(csv_data)
+    
+    # Write header
+    writer.writerow(["Category", "Parameter", "Value", "Units"])
+    
+    # 1. Station Information
+    writer.writerow(["Station Information", "Station Name", data.get('place', 'N/A'), ""])
+    writer.writerow(["Station Information", "WMO Code", data.get('wmo', 'N/A'), ""])
+    
+    elev_m = data.get('elev', 'N/A')
+    elev_ft = 'N/A'
+    if elev_m != 'N/A' and elev_m:
+        try:
+            elev_ft = int(float(elev_m) * 3.28084)
+        except:
+            elev_ft = 'N/A'
+    writer.writerow(["Station Information", "Elevation", f"{elev_ft} ft ({elev_m} m)", "feet/meters"])
+    writer.writerow(["Station Information", "Data Period", data.get('period', 'N/A'), ""])
+    
+    # 2. Location & Basic Information
+    location_params = [
+        ("Latitude", data.get('lat', 'N/A'), "degrees"),
+        ("Longitude", data.get('long', 'N/A'), "degrees"),
+        ("Country", data.get('country', 'N/A'), ""),
+        ("State/Region", data.get('state', 'N/A'), ""),
+        ("Time Zone", f"UTC{data.get('time_zone', 'N/A')}", ""),
+        ("Climate Zone", data.get('climate_zone', 'N/A'), ""),
+        ("Coldest Month", data.get('coldest_month', 'N/A'), ""),
+        ("Hottest Month", data.get('hottest_month', 'N/A'), ""),
+        ("Standard Pressure", data.get('stdp', 'N/A'), "kPa"),
+        ("WBAN Code", data.get('wban', 'N/A'), ""),
+        ("Warm Humid Location", "Yes" if data.get('warm_humid_location') == '1' else "No", "")
+    ]
+    
+    for param, value, unit in location_params:
+        writer.writerow(["Location & Basic Information", param, value, unit])
+    
+    # 3. Cooling Dry Bulb Values
+    cooling_designs = ["0.4%", "2%"]
+    db_fields = ['cooling_DB_MCWB_0.4_DB', 'cooling_DB_MCWB_2_DB']
+    
+    for design, db_field in zip(cooling_designs, db_fields):
+        writer.writerow(["Cooling Dry Bulb Values", f"{design} Dry Bulb", data.get(db_field, 'N/A'), "°C"])
+    
+    # 4. Extreme Temperatures (Dry Bulb)
+    extreme_categories = ["Extreme Annual Mean", "5-year", "10-year", "20-year", "50-year"]
+    min_fields = [
+        'extreme_annual_DB_mean_min',
+        'n-year_return_period_values_of_extreme_DB_5_min',
+        'n-year_return_period_values_of_extreme_DB_10_min',
+        'n-year_return_period_values_of_extreme_DB_20_min',
+        'n-year_return_period_values_of_extreme_DB_50_min'
+    ]
+    max_fields = [
+        'extreme_annual_DB_mean_max',
+        'n-year_return_period_values_of_extreme_DB_5_max',
+        'n-year_return_period_values_of_extreme_DB_10_max',
+        'n-year_return_period_values_of_extreme_DB_20_max',
+        'n-year_return_period_values_of_extreme_DB_50_max'
+    ]
+    
+    for category, min_field, max_field in zip(extreme_categories, min_fields, max_fields):
+        writer.writerow(["Extreme Temperatures (Dry Bulb)", f"{category} Minimum", data.get(min_field, 'N/A'), "°C"])
+        writer.writerow(["Extreme Temperatures (Dry Bulb)", f"{category} Maximum", data.get(max_field, 'N/A'), "°C"])
+    
+    # 5. Monthly Average Temperatures
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    # Monthly average temperatures
+    temp_fields = ['dbavg_jan', 'dbavg_feb', 'dbavg_mar', 'dbavg_apr', 'dbavg_may', 'dbavg_jun',
+                  'dbavg_jul', 'dbavg_aug', 'dbavg_sep', 'dbavg_oct', 'dbavg_nov', 'dbavg_dec']
+    
+    # Monthly standard deviations
+    std_fields = ['dbstd_jan', 'dbstd_feb', 'dbstd_mar', 'dbstd_apr', 'dbstd_may', 'dbstd_jun',
+                 'dbstd_jul', 'dbstd_aug', 'dbstd_sep', 'dbstd_oct', 'dbstd_nov', 'dbstd_dec']
+    
+    for month, temp_field, std_field in zip(months, temp_fields, std_fields):
+        # Use fallback to tavg_ fields if dbavg_ fields not available
+        temp_value = data.get(temp_field, data.get(f'tavg_{month.lower()}', 'N/A'))
+        std_value = data.get(std_field, data.get(f'sd_{month.lower()}', 'N/A'))
+        
+        writer.writerow(["Monthly Average Temperatures", f"{month} Average Temperature", temp_value, "°C"])
+        writer.writerow(["Monthly Average Temperatures", f"{month} Standard Deviation", std_value, "°C"])
+    
+    # Annual average
+    annual_temp = data.get('dbavg_annual', data.get('tavg_annual', 'N/A'))
+    writer.writerow(["Monthly Average Temperatures", "Annual Average Temperature", annual_temp, "°C"])
+    
+    # 6. Monthly Design Dry Bulb Temperatures 0.4%
+    db_04_fields = ['0.4_DB_jan', '0.4_DB_feb', '0.4_DB_mar', '0.4_DB_apr', '0.4_DB_may', '0.4_DB_jun',
+                   '0.4_DB_jul', '0.4_DB_aug', '0.4_DB_sep', '0.4_DB_oct', '0.4_DB_nov', '0.4_DB_dec']
+    
+    for month, field in zip(months, db_04_fields):
+        writer.writerow(["Monthly Design Dry Bulb Temperatures 0.4%", f"{month} 0.4% DB", data.get(field, 'N/A'), "°C"])
+    
+    # 7. Monthly Design Dry Bulb Temperatures 2%
+    db_2_fields = ['2_DB_jan', '2_DB_feb', '2_DB_mar', '2_DB_apr', '2_DB_may', '2_DB_jun',
+                  '2_DB_jul', '2_DB_aug', '2_DB_sep', '2_DB_oct', '2_DB_nov', '2_DB_dec']
+    
+    for month, field in zip(months, db_2_fields):
+        writer.writerow(["Monthly Design Dry Bulb Temperatures 2%", f"{month} 2% DB", data.get(field, 'N/A'), "°C"])
+    
+    # 8. Solar Conditions
+    if data.get('taub_jan'):
+        # Optical Depth - Beam
+        taub_fields = ['taub_jan', 'taub_feb', 'taub_mar', 'taub_apr', 'taub_may', 'taub_jun',
+                      'taub_jul', 'taub_aug', 'taub_sep', 'taub_oct', 'taub_nov', 'taub_dec']
+        
+        # Optical Depth - Diffuse
+        taud_fields = ['taud_jan', 'taud_feb', 'taud_mar', 'taud_apr', 'taud_may', 'taud_jun',
+                      'taud_jul', 'taud_aug', 'taud_sep', 'taud_oct', 'taud_nov', 'taud_dec']
+        
+        # Solar Irradiance - Beam Normal
+        ebn_fields = ['ebn_noon_jan', 'ebn_noon_feb', 'ebn_noon_mar', 'ebn_noon_apr', 'ebn_noon_may', 'ebn_noon_jun',
+                     'ebn_noon_jul', 'ebn_noon_aug', 'ebn_noon_sep', 'ebn_noon_oct', 'ebn_noon_nov', 'ebn_noon_dec']
+        
+        # Solar Irradiance - Diffuse Horizontal
+        edn_fields = ['edn_noon_jan', 'edn_noon_feb', 'edn_noon_mar', 'edn_noon_apr', 'edn_noon_may', 'edn_noon_jun',
+                     'edn_noon_jul', 'edn_noon_aug', 'edn_noon_sep', 'edn_noon_oct', 'edn_noon_nov', 'edn_noon_dec']
+        
+        for month, taub_field, taud_field, ebn_field, edn_field in zip(months, taub_fields, taud_fields, ebn_fields, edn_fields):
+            writer.writerow(["Solar Conditions (Optical Depth)", f"{month} Beam (τb)", data.get(taub_field, 'N/A'), ""])
+            writer.writerow(["Solar Conditions (Optical Depth)", f"{month} Diffuse (τd)", data.get(taud_field, 'N/A'), ""])
+            writer.writerow(["Solar Conditions (Solar Irradiance)", f"{month} Beam Normal", data.get(ebn_field, 'N/A'), "W/m²"])
+            writer.writerow(["Solar Conditions (Solar Irradiance)", f"{month} Diffuse Horizontal", data.get(edn_field, 'N/A'), "W/m²"])
+    
+    return csv_data.getvalue()
 
 # Main App
 def main():
@@ -620,109 +756,32 @@ def main():
         # Display the data in PDF-like format
         display_station_data_in_pdf_format(st.session_state.selected_station_data)
         
-        # Add download buttons
-        st.markdown("---")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Download as JSON
-            json_data = json.dumps(st.session_state.selected_station_data, indent=2)
-            st.download_button(
-                label="📥 Download as JSON",
-                data=json_data,
-                file_name=f"ashrae_2021_data_{wmo_code}.json",
-                mime="application/json",
-                width='stretch'
-            )
-        
-        with col2:
-            # Download as CSV (key parameters only)
-            import csv
-            import io
-            
-            # Create CSV from categorized data
-            def categorize_station_data(data: Dict) -> Dict:
-                """Categorize station data into logical groups"""
-                if not data:
-                    return {}
-                
-                categories = {
-                    "Station Information": {
-                        "place": data.get('place'),
-                        "wmo": data.get('wmo'),
-                        "lat": data.get('lat'),
-                        "long": data.get('long'),
-                        "elev": data.get('elev'),
-                        "country": data.get('country'),
-                        "state": data.get('state'),
-                        "period": data.get('period'),
-                        "time_zone": data.get('time_zone'),
-                        "coldest_month": data.get('coldest_month'),
-                        "hottest_month": data.get('hottest_month'),
-                    },
-                    "Heating Design Conditions": {
-                        "heating_DB_99.6": data.get('heating_DB_99.6'),
-                        "heating_DB_99": data.get('heating_DB_99'),
-                    },
-                    "Cooling Design Conditions": {
-                        "cooling_DB_MCWB_0.4_DB": data.get('cooling_DB_MCWB_0.4_DB'),
-                        "cooling_DB_MCWB_0.4_MCWB": data.get('cooling_DB_MCWB_0.4_MCWB'),
-                        "cooling_DB_MCWB_1_DB": data.get('cooling_DB_MCWB_1_DB'),
-                        "cooling_DB_MCWB_1_MCWB": data.get('cooling_DB_MCWB_1_MCWB'),
-                        "cooling_DB_MCWB_2_DB": data.get('cooling_DB_MCWB_2_DB'),
-                        "cooling_DB_MCWB_2_MCWB": data.get('cooling_DB_MCWB_2_MCWB'),
-                    },
-                    "Extreme Temperatures": {
-                        "n-year_return_period_values_of_extreme_DB_50_min": data.get('n-year_return_period_values_of_extreme_DB_50_min'),
-                        "n-year_return_period_values_of_extreme_DB_50_max": data.get('n-year_return_period_values_of_extreme_DB_50_max'),
-                    },
-                    "Monthly Average Temperatures": {
-                        "tavg_annual": data.get('tavg_annual'),
-                    },
-                    "Degree Days": {
-                        "hdd18.3_annual": data.get('hdd18.3_annual'),
-                        "cdd10.0_annual": data.get('cdd10.0_annual'),
-                    }
-                }
-                return categories
-            
-            categorized = categorize_station_data(st.session_state.selected_station_data)
-            csv_data = io.StringIO()
-            writer = csv.writer(csv_data)
-            
-            # Write header
-            writer.writerow(["Category", "Parameter", "Value", "Units"])
-            
-            # Write data
-            for category, params in categorized.items():
-                for param, value in params.items():
-                    if value and value != 'n/a':
-                        # Determine units based on parameter name
-                        units = ""
-                        if any(x in param.lower() for x in ['db', 'wb', 'mcdb', 'mcwb', 'temp', 'tavg']):
-                            units = "°C"
-                        elif 'hdd' in param.lower() or 'cdd' in param.lower():
-                            units = "°C-days"
-                        elif 'cdh' in param.lower():
-                            units = "°C-hours"
-                        elif 'ws' in param.lower() or 'speed' in param.lower():
-                            units = "m/s"
-                        elif 'hr' in param.lower():
-                            units = "g/kg"
-                        elif 'elev' in param.lower():
-                            units = "m"
-                        elif 'pressure' in param.lower() or 'stdp' in param.lower():
-                            units = "kPa"
-                        
-                        writer.writerow([category, param, value, units])
-            
-            st.download_button(
-                label="📊 Download as CSV",
-                data=csv_data.getvalue(),
-                file_name=f"ashrae_2021_summary_{wmo_code}.csv",
-                mime="text/csv",
-                width='stretch'
-            )
+        # Replace the download button section with this:
+
+# Add download button at the bottom
+st.markdown("---")
+st.markdown("### 📥 Export Data")
+
+# Create CSV export
+if st.button("📊 Export All Data to CSV", type="secondary", width='stretch'):
+    csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
+    
+    # Create download button for CSV
+    st.download_button(
+        label="⬇️ Download CSV",
+        data=csv_content,
+        file_name=f"ashrae_station_{wmo_code}_data.csv",
+        mime="text/csv",
+        width='stretch'
+    )
+    
+    # Show preview
+    with st.expander("📋 CSV Preview"):
+        # Display first 20 lines of CSV
+        lines = csv_content.split('\n')
+        st.text('\n'.join(lines[:20]))
+        if len(lines) > 20:
+            st.text(f"... and {len(lines) - 20} more lines")
     
     # Footer
     st.markdown("---")
