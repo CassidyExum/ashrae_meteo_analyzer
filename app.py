@@ -66,7 +66,19 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         
-        data = response.json()
+        # Handle UTF-8 BOM (Byte Order Mark) if present
+        content = response.content
+        
+        # Check for UTF-8 BOM and decode accordingly
+        if content.startswith(b'\xef\xbb\xbf'):
+            # UTF-8 with BOM
+            text = content.decode('utf-8-sig')
+        else:
+            # Regular UTF-8
+            text = content.decode('utf-8')
+        
+        # Parse JSON
+        data = json.loads(text)
         stations = data.get('meteo_stations', [])
         
         if not stations:
@@ -77,6 +89,7 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
         for station in stations:
             radians = float(station.get('tt', 0))
             station['distance_miles'] = round(radians * 3958.8, 2)
+            
             # Convert elevation from meters to feet (1 meter = 3.28084 feet)
             elev_m = station.get('elev')
             station['elevation_ft'] = 'N/A'  # Default value
@@ -108,16 +121,41 @@ def get_station_data(wmo: str, ashrae_version: int = 2021, si_ip: str = "SI") ->
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         
-        data = response.json()
+        # Handle UTF-8 BOM (Byte Order Mark) if present
+        content = response.content
+        
+        # Check for UTF-8 BOM and decode accordingly
+        if content.startswith(b'\xef\xbb\xbf'):
+            # UTF-8 with BOM
+            text = content.decode('utf-8-sig')
+        else:
+            # Regular UTF-8
+            text = content.decode('utf-8')
+        
+        # Parse JSON
+        data = json.loads(text)
         stations = data.get('meteo_stations', [])
         
         if not stations:
+            st.warning(f"No data found for station WMO: {wmo}")
             return None
         
-        return stations[0]
+        station_data = stations[0]
+        return station_data
         
+    except requests.exceptions.RequestException as e:
+        st.error(f"Network error fetching station data: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        st.error(f"Failed to parse JSON response: {e}")
+        # Print first 500 chars of response for debugging
+        try:
+            st.text(f"Response preview: {response.text[:500] if 'response' in locals() else 'No response'}")
+        except:
+            pass
+        return None
     except Exception as e:
-        st.error(f"Error fetching station data: {e}")
+        st.error(f"Unexpected error: {e}")
         return None
 
 def format_station_table(stations: List[Dict]) -> pd.DataFrame:
