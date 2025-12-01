@@ -410,15 +410,6 @@ def main():
             # Format and display table
             stations_df = format_station_table(st.session_state.stations)
             
-            # Apply some styling to the dataframe
-            styled_df = stations_df.style.format({
-                'Distance (miles)': '{:.2f}',
-                'Elevation (m)': '{:.0f}'
-            }).set_properties(**{
-                'background-color': '#f8f9fa',
-                'border': '1px solid #dee2e6'
-            })
-            
             st.dataframe(
                 styled_df,
                 use_container_width=True,
