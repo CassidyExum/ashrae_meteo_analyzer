@@ -79,14 +79,18 @@ def get_nearest_stations(lat: float, long: float, num_stations: int = 10) -> Lis
             station['distance_miles'] = round(radians * 3958.8, 2)
             # Convert elevation from meters to feet (1 meter = 3.28084 feet)
             elev_m = station.get('elev')
-            if elev_m and elev_m != 'N/A':
+            station['elevation_ft'] = 'N/A'  # Default value
+            
+            if elev_m and elev_m != 'N/A' and elev_m != '':
                 try:
-                    elev_ft = round(float(elev_m) * 3.28084, 0)
-                    station['elevation_ft'] = int(elev_ft)
-                except:
+                    # Clean the string - remove any non-numeric characters except decimal point
+                    clean_elev = ''.join(c for c in str(elev_m) if c.isdigit() or c == '.')
+                    if clean_elev:  # Check if we got any numbers
+                        elev_float = float(clean_elev)
+                        elev_ft = round(elev_float * 3.28084, 0)
+                        station['elevation_ft'] = int(elev_ft)
+                except (ValueError, TypeError):
                     station['elevation_ft'] = 'N/A'
-            else:
-                station['elevation_ft'] = 'N/A'
         
         return stations
         
@@ -123,14 +127,35 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
     
     table_data = []
     for i, station in enumerate(stations):
+        # Get elevation value - handle both numeric and string 'N/A'
+        elev_ft = station.get('elevation_ft', 'N/A')
+        if elev_ft != 'N/A' and elev_ft is not None:
+            try:
+                # Convert to integer if it's a number
+                elev_display = int(float(elev_ft))
+            except:
+                elev_display = 'N/A'
+        else:
+            elev_display = 'N/A'
+        
+        # Get distance value
+        distance = station.get('distance_miles', 'N/A')
+        if distance != 'N/A' and distance is not None:
+            try:
+                distance_display = float(distance)
+            except:
+                distance_display = 'N/A'
+        else:
+            distance_display = 'N/A'
+        
         table_data.append({
             "#": i + 1,
             "Station Name": station.get('place', 'N/A'),
             "WMO Code": station.get('wmo', 'N/A'),
             "Latitude": station.get('lat', 'N/A'),
             "Longitude": station.get('long', 'N/A'),
-            "Elevation (ft)": station.get('elevation_ft', 'N/A'),
-            "Distance (miles)": station.get('distance_miles', 'N/A')
+            "Elevation (ft)": elev_display,
+            "Distance (miles)": distance_display
         })
     
     return pd.DataFrame(table_data)
@@ -434,10 +459,10 @@ def main():
                 "#": st.column_config.NumberColumn(width="small"),
                 "Station Name": st.column_config.TextColumn(width="large"),
                 "WMO Code": st.column_config.TextColumn(width="small"),
-                "Latitude": st.column_config.NumberColumn(format="%.4f"),
-                "Longitude": st.column_config.NumberColumn(format="%.4f"),
-                "Elevation (ft)": st.column_config.NumberColumn(format="%d"),
-                "Distance (miles)": st.column_config.NumberColumn(format="%.2f")
+                "Latitude": st.column_config.TextColumn(width="medium"),
+                "Longitude": st.column_config.TextColumn(width="medium"),
+                "Elevation (ft)": st.column_config.TextColumn(width="medium"),
+                "Distance (miles)": st.column_config.TextColumn(width="medium")
             }
         )
         
