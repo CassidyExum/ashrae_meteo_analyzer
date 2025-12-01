@@ -443,7 +443,11 @@ def main():
     
     # Header
     st.markdown('<h1 class="main-header">🌤️ ASHRAE Meteo Station Finder</h1>', unsafe_allow_html=True)
-    st.markdown("Find weather stations and access ASHRAE 2021 meteorological data for any location.")
+    st.markdown("""
+    Find weather stations and access ASHRAE 2021 meteorological data for any location.
+    
+    [Visit the ASHRAE site](https://ashrae-meteo.info/v3.0/)
+    </div>""")
     
     # Initialize session state
     if 'stations' not in st.session_state:
