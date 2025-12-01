@@ -762,6 +762,9 @@ def main():
     st.markdown("---")
     st.markdown("### 📥 Export Data")
 
+    # Create and display download button for CSV
+    csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
+
     st.download_button(
         label="📊 Download All Data as CSV",
         data=csv_content,
