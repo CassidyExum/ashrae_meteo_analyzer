@@ -623,7 +623,7 @@ def main():
     st.markdown("""
     <div style='text-align: center; color: #6B7280;'>
         <p>ASHRAE 2021 Meteo Data v3.0 | Data provided by ashrae-meteo.info</p>
-        <p>This tool retrieves ASHRAE 2021 meteorological design conditions for HVAC system design</p>
+        <p>This tool retrieves ASHRAE 2021 meteorological design conditions for Solar and BESS system design</p>
         <p><strong>Fixed Settings:</strong> Always shows 10 nearest stations | Always uses ASHRAE 2021 version</p>
     </div>
     """, unsafe_allow_html=True)
