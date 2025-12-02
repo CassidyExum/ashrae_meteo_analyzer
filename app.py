@@ -369,7 +369,11 @@ def display_station_data_in_pdf_format(data: Dict):
     overview_df['Value'] = overview_df['Value'].apply(format_temp)
     
     # Display the table
-    st.table(overview_df)
+     st.dataframe(
+         overview_df,
+         hide_index=True,
+         use_container_width=True
+    )
     
 def export_overview_data_to_csv(data: Dict) -> str:
     """Export only the overview data to CSV format with UTF-8 BOM"""
