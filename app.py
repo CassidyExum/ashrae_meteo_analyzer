@@ -205,6 +205,97 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
     
     return pd.DataFrame(table_data)
 
+def extract_highest_monthly_temps(data: Dict) -> Dict:
+    """
+    Extract the highest monthly temperatures from three data sets:
+    1. Monthly average temperatures (dbavg_jan through dbavg_dec)
+    2. Monthly 0.4% design temperatures (0.4_DB_jan through 0.4_DB_dec)
+    3. Monthly 2% design temperatures (2_DB_jan through 2_DB_dec)
+    
+    Returns:
+        Dictionary with:
+        - highest_avg_temp: Highest monthly average temperature
+        - highest_04_temp: Highest 0.4% design temperature  
+        - highest_2_temp: Highest 2% design temperature
+        - avg_hottest_month: Month with highest average temp
+        - 04_hottest_month: Month with highest 0.4% design temp
+        - 2_hottest_month: Month with highest 2% design temp
+    """
+    if not data:
+        return {}
+    
+    # Month names in order
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    # 1. Extract monthly average temperatures (dbavg_ fields)
+    avg_temp_fields = ['dbavg_jan', 'dbavg_feb', 'dbavg_mar', 'dbavg_apr', 'dbavg_may', 'dbavg_jun',
+                      'dbavg_jul', 'dbavg_aug', 'dbavg_sep', 'dbavg_oct', 'dbavg_nov', 'dbavg_dec']
+    
+    avg_temps = []
+    for month, field in zip(months, avg_temp_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                avg_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                avg_temps.append((month, None))
+        else:
+            avg_temps.append((month, None))
+    
+    # 2. Extract 0.4% design temperatures
+    db_04_fields = ['0.4_DB_jan', '0.4_DB_feb', '0.4_DB_mar', '0.4_DB_apr', '0.4_DB_may', '0.4_DB_jun',
+                   '0.4_DB_jul', '0.4_DB_aug', '0.4_DB_sep', '0.4_DB_oct', '0.4_DB_nov', '0.4_DB_dec']
+    
+    db_04_temps = []
+    for month, field in zip(months, db_04_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                db_04_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                db_04_temps.append((month, None))
+        else:
+            db_04_temps.append((month, None))
+    
+    # 3. Extract 2% design temperatures
+    db_2_fields = ['2_DB_jan', '2_DB_feb', '2_DB_mar', '2_DB_apr', '2_DB_may', '2_DB_jun',
+                  '2_DB_jul', '2_DB_aug', '2_DB_sep', '2_DB_oct', '2_DB_nov', '2_DB_dec']
+    
+    db_2_temps = []
+    for month, field in zip(months, db_2_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                db_2_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                db_2_temps.append((month, None))
+        else:
+            db_2_temps.append((month, None))
+    
+# Find highest values for each set
+def find_highest(temps_list):
+    """Helper function to find highest temperature and month"""
+    valid_temps = [(month, temp) for month, temp in temps_list if temp is not None]
+    if not valid_temps:
+        return None, None
+        # Find max temperature
+        highest_month, highest_temp = max(valid_temps, key=lambda x: x[1])
+        return highest_temp, highest_month
+        
+    highest_avg_temp, avg_hottest_month = find_highest(avg_temps)
+    highest_04_temp, 04_hottest_month = find_highest(db_04_temps)
+    highest_2_temp, 2_hottest_month = find_highest(db_2_temps)
+    
+    return {
+        'highest_avg_temp': highest_avg_temp,
+        'highest_04_temp': highest_04_temp,
+        'highest_2_temp': highest_2_temp,
+        'avg_hottest_month': avg_hottest_month,
+        '04_hottest_month': 04_hottest_month,
+        '2_hottest_month': 2_hottest_month
+    }
+
 def display_station_data_in_pdf_format(data: Dict):
     """Display station data in organized tables"""
     if not data:
@@ -234,6 +325,32 @@ def display_station_data_in_pdf_format(data: Dict):
             st.metric("Elevation", f"{elev_ft} ft ({elev_m} m)")
         with col4:
             st.metric("Data Period", data.get('period', 'N/A'))
+
+    # Table 1: Overview table
+    st.markdown("---")
+    st.markdown("### 📋 Location & Basic Information")
+    hottest_month_04 = find_hottest_dbavg()
+    
+    location_data = {
+        "Parameter": ['Extreme Annual Max', 'Extreme Annual Min', 'N = 20 Max',
+                      'N = 20 Min', 'N = 50 Max', 'N = 50 Min', 'Yearly 0.4% High',
+                      'Yearly 2.0% High', 'Highest Monthly 0.4%', 'Highest Monthly 2.0%', 
+                      'Annual Average', 'Highest Monthly Average'   
+        ],
+        "Value": [
+            data.get('extreme_annual_DB_mean_max', 'N/A'),
+            data.get('extreme_annual_DB_mean_min', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_20_max', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_20_min', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_50_max', 'N/A'),
+            data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A'),
+            data.get('cooling_DB_MCWB_0.4_DB', 'N/A'),
+            data.get('cooling_DB_MCWB_2_DB', 'N/A'),
+            
+            
+        ]
+    }
+    st.table(pd.DataFrame(location_data))
     
     # Table 1: Location & Basic Info
     st.markdown("---")
@@ -314,20 +431,6 @@ def display_station_data_in_pdf_format(data: Dict):
             data.get('dbavg_nov', data.get('tavg_nov', 'N/A')),
             data.get('dbavg_dec', data.get('tavg_dec', 'N/A'))
         ],
-        "Std Dev (°C)": [
-            data.get('dbstd_jan', data.get('sd_jan', 'N/A')),
-            data.get('dbstd_feb', data.get('sd_feb', 'N/A')),
-            data.get('dbstd_mar', data.get('sd_mar', 'N/A')),
-            data.get('dbstd_apr', data.get('sd_apr', 'N/A')),
-            data.get('dbstd_may', data.get('sd_may', 'N/A')),
-            data.get('dbstd_jun', data.get('sd_jun', 'N/A')),
-            data.get('dbstd_jul', data.get('sd_jul', 'N/A')),
-            data.get('dbstd_aug', data.get('sd_aug', 'N/A')),
-            data.get('dbstd_sep', data.get('sd_sep', 'N/A')),
-            data.get('dbstd_oct', data.get('sd_oct', 'N/A')),
-            data.get('dbstd_nov', data.get('sd_nov', 'N/A')),
-            data.get('dbstd_dec', data.get('sd_dec', 'N/A'))
-        ]
     }
     st.table(pd.DataFrame(monthly_data))
     st.metric("Annual Average Temperature", f"{data.get('dbavg_annual', data.get('tavg_annual', 'N/A'))}°C")
@@ -378,82 +481,7 @@ def display_station_data_in_pdf_format(data: Dict):
     }
     st.table(pd.DataFrame(monthly_db_2_data))
 
-    # Table 8: Solar Radiation
-    st.markdown("---")
-    st.markdown("### ☀️ Solar Conditions")
-    if data.get('taub_jan'):
-        # Create tabs for different solar data
-        solar_tab1, solar_tab2 = st.tabs(["Optical Depth", "Solar Irradiance"])
-        
-        with solar_tab1:
-            optical_depth_data = {
-                "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                "Beam (τb)": [
-                    data.get('taub_jan', 'N/A'),
-                    data.get('taub_feb', 'N/A'),
-                    data.get('taub_mar', 'N/A'),
-                    data.get('taub_apr', 'N/A'),
-                    data.get('taub_may', 'N/A'),
-                    data.get('taub_jun', 'N/A'),
-                    data.get('taub_jul', 'N/A'),
-                    data.get('taub_aug', 'N/A'),
-                    data.get('taub_sep', 'N/A'),
-                    data.get('taub_oct', 'N/A'),
-                    data.get('taub_nov', 'N/A'),
-                    data.get('taub_dec', 'N/A')
-                ],
-                "Diffuse (τd)": [
-                    data.get('taud_jan', 'N/A'),
-                    data.get('taud_feb', 'N/A'),
-                    data.get('taud_mar', 'N/A'),
-                    data.get('taud_apr', 'N/A'),
-                    data.get('taud_may', 'N/A'),
-                    data.get('taud_jun', 'N/A'),
-                    data.get('taud_jul', 'N/A'),
-                    data.get('taud_aug', 'N/A'),
-                    data.get('taud_sep', 'N/A'),
-                    data.get('taud_oct', 'N/A'),
-                    data.get('taud_nov', 'N/A'),
-                    data.get('taud_dec', 'N/A')
-                ]
-            }
-            st.table(pd.DataFrame(optical_depth_data))
-        
-        with solar_tab2:
-            irradiance_data = {
-                "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                "Beam Normal (W/m²)": [
-                    data.get('ebn_noon_jan', 'N/A'),
-                    data.get('ebn_noon_feb', 'N/A'),
-                    data.get('ebn_noon_mar', 'N/A'),
-                    data.get('ebn_noon_apr', 'N/A'),
-                    data.get('ebn_noon_may', 'N/A'),
-                    data.get('ebn_noon_jun', 'N/A'),
-                    data.get('ebn_noon_jul', 'N/A'),
-                    data.get('ebn_noon_aug', 'N/A'),
-                    data.get('ebn_noon_sep', 'N/A'),
-                    data.get('ebn_noon_oct', 'N/A'),
-                    data.get('ebn_noon_nov', 'N/A'),
-                    data.get('ebn_noon_dec', 'N/A')
-                ],
-                "Diffuse Horizontal (W/m²)": [
-                    data.get('edn_noon_jan', 'N/A'),
-                    data.get('edn_noon_feb', 'N/A'),
-                    data.get('edn_noon_mar', 'N/A'),
-                    data.get('edn_noon_apr', 'N/A'),
-                    data.get('edn_noon_may', 'N/A'),
-                    data.get('edn_noon_jun', 'N/A'),
-                    data.get('edn_noon_jul', 'N/A'),
-                    data.get('edn_noon_aug', 'N/A'),
-                    data.get('edn_noon_sep', 'N/A'),
-                    data.get('edn_noon_oct', 'N/A'),
-                    data.get('edn_noon_nov', 'N/A'),
-                    data.get('edn_noon_dec', 'N/A')
-                ]
-            }
-            st.table(pd.DataFrame(irradiance_data))
+    
 def export_station_data_to_csv(data: Dict) -> str:
     """Export all displayed station data to CSV format matching the display"""
     if not data:
