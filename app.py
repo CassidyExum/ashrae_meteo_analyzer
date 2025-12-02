@@ -369,14 +369,23 @@ def display_station_data_in_pdf_format(data: Dict):
     overview_df['Value'] = overview_df['Value'].apply(format_temp)
 
     # Display the table
-    st.table(overview_df)
+    # st.table(overview_df)
     
     # Display the table
-    # st.dataframe(
-    #     overview_df,
-    #     hide_index=True,
-    #     use_container_width=True
-    # )
+    # Display the table with NO index and NO scrolling
+    # Calculate height: 12 rows + header + some padding
+    table_height = (12 * 35) + 40  # 35px per row, 40px for header
+    
+    st.dataframe(
+        overview_df,
+        hide_index=True,
+        use_container_width=True,
+        height=table_height,  # Fixed height to prevent scrolling
+        column_config={
+            "Parameter": st.column_config.TextColumn(width="medium"),
+            "Value": st.column_config.TextColumn(width="small")
+        }
+    )
     
 def export_overview_data_to_csv(data: Dict) -> str:
     """Export only the overview data to CSV format with UTF-8 BOM"""
