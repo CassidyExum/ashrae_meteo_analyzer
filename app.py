@@ -566,7 +566,9 @@ def main():
     if st.session_state.selected_station_data:
         # Get WMO code from session state
         wmo_code = st.session_state.get('wmo_code', 'unknown')
-    
+
+        display_station_data_in_pdf_format(st.session_state.selected_station_data)
+
         # Create and display download button for CSV
         csv_content = export_overview_data_to_csv(st.session_state.selected_station_data)
     
