@@ -372,7 +372,7 @@ def display_station_data_in_pdf_format(data: Dict):
     st.table(overview_df)
     
 def export_overview_data_to_csv(data: Dict) -> str:
-    """Export only the overview data to CSV format"""
+    """Export only the overview data to CSV format with UTF-8 BOM"""
     if not data:
         return ""
     
@@ -383,12 +383,17 @@ def export_overview_data_to_csv(data: Dict) -> str:
     highest_monthly_temps = extract_highest_monthly_temps(data)
     
     csv_data = io.StringIO()
+    
+    # Add UTF-8 BOM at the beginning
+    csv_data.write('\ufeff')
+    
+    # Use csv.writer
     writer = csv.writer(csv_data)
     
-    # Write header
+    # Write header with degree symbol
     writer.writerow(["Parameter", "Value", "Units"])
     
-    # Define overview data
+    # Define overview data with degree symbol
     overview_params = [
         ("Extreme Annual Max", data.get('extreme_annual_DB_mean_max', 'N/A'), "°C"),
         ("Extreme Annual Min", data.get('extreme_annual_DB_mean_min', 'N/A'), "°C"),
