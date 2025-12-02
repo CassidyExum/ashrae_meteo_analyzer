@@ -354,7 +354,22 @@ def display_station_data_in_pdf_format(data: Dict):
             highest_monthly_temps.get('highest_avg_temp', 'N/A')
         ]
     }
-    st.table(pd.DataFrame(overview_data))
+    # Create DataFrame
+    overview_df = pd.DataFrame(overview_data)
+    
+    # Format numeric values
+    def format_temp(val):
+        if val == 'N/A' or val is None:
+            return 'N/A'
+        try:
+            return f"{float(val):.1f}°C"
+        except:
+            return str(val)
+    
+    overview_df['Value'] = overview_df['Value'].apply(format_temp)
+    
+    # Display the table
+    st.table(overview_df)
     
 def export_overview_data_to_csv(data: Dict) -> str:
     """Export only the overview data to CSV format"""
