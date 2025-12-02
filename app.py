@@ -348,9 +348,9 @@ def display_station_data_in_pdf_format(data: Dict):
             data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A'),
             data.get('cooling_DB_MCWB_0.4_DB', 'N/A'),
             data.get('cooling_DB_MCWB_2_DB', 'N/A'),
-            highest_monthly_temps.get('highest_04_temp', 'N/A')
-            highest_monthly_temps.get('highest_2_temp', 'N/A')
-            data.get('dbavg_annual')
+            highest_monthly_temps.get('highest_04_temp', 'N/A'),
+            highest_monthly_temps.get('highest_2_temp', 'N/A'),
+            data.get('dbavg_annual'),
             highest_monthly_temps.get('highest_avg_temp', 'N/A')
         ]
     }
