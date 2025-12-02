@@ -362,7 +362,7 @@ def display_station_data_in_pdf_format(data: Dict):
         if val == 'N/A' or val is None:
             return 'N/A'
         try:
-            return f"{float(val):.1f}°C"
+            return f"{float(val):.1f} °C"
         except:
             return str(val)
     
