@@ -205,6 +205,98 @@ def format_station_table(stations: List[Dict]) -> pd.DataFrame:
     
     return pd.DataFrame(table_data)
 
+def extract_highest_monthly_temps(data: Dict) -> Dict:
+    """
+    Extract the highest monthly temperatures from three data sets:
+    1. Monthly average temperatures (dbavg_jan through dbavg_dec)
+    2. Monthly 0.4% design temperatures (0.4_DB_jan through 0.4_DB_dec)
+    3. Monthly 2% design temperatures (2_DB_jan through 2_DB_dec)
+    
+    Returns:
+        Dictionary with:
+        - highest_avg_temp: Highest monthly average temperature
+        - highest_04_temp: Highest 0.4% design temperature  
+        - highest_2_temp: Highest 2% design temperature
+        - avg_hottest_month: Month with highest average temp
+        - 04_hottest_month: Month with highest 0.4% design temp
+        - 2_hottest_month: Month with highest 2% design temp
+    """
+    if not data:
+        return {}
+    
+    # Month names in order
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    # 1. Extract monthly average temperatures (dbavg_ fields)
+    avg_temp_fields = ['dbavg_jan', 'dbavg_feb', 'dbavg_mar', 'dbavg_apr', 'dbavg_may', 'dbavg_jun',
+                      'dbavg_jul', 'dbavg_aug', 'dbavg_sep', 'dbavg_oct', 'dbavg_nov', 'dbavg_dec']
+    
+    avg_temps = []
+    for month, field in zip(months, avg_temp_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                avg_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                avg_temps.append((month, None))
+        else:
+            avg_temps.append((month, None))
+    
+    # 2. Extract 0.4% design temperatures
+    db_04_fields = ['0.4_DB_jan', '0.4_DB_feb', '0.4_DB_mar', '0.4_DB_apr', '0.4_DB_may', '0.4_DB_jun',
+                   '0.4_DB_jul', '0.4_DB_aug', '0.4_DB_sep', '0.4_DB_oct', '0.4_DB_nov', '0.4_DB_dec']
+    
+    db_04_temps = []
+    for month, field in zip(months, db_04_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                db_04_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                db_04_temps.append((month, None))
+        else:
+            db_04_temps.append((month, None))
+    
+    # 3. Extract 2% design temperatures
+    db_2_fields = ['2_DB_jan', '2_DB_feb', '2_DB_mar', '2_DB_apr', '2_DB_may', '2_DB_jun',
+                  '2_DB_jul', '2_DB_aug', '2_DB_sep', '2_DB_oct', '2_DB_nov', '2_DB_dec']
+    
+    db_2_temps = []
+    for month, field in zip(months, db_2_fields):
+        temp = data.get(field)
+        if temp and temp != 'N/A':
+            try:
+                db_2_temps.append((month, float(temp)))
+            except (ValueError, TypeError):
+                db_2_temps.append((month, None))
+        else:
+            db_2_temps.append((month, None))
+    
+    # Find highest values for each set
+    def find_highest(temps_list):
+        """Helper function to find highest temperature and month"""
+        valid_temps = [(month, temp) for month, temp in temps_list if temp is not None]
+        if not valid_temps:
+            return None, None
+        
+        # Find max temperature
+        highest_month, highest_temp = max(valid_temps, key=lambda x: x[1])
+        return highest_temp, highest_month
+    
+    highest_avg_temp, avg_hottest_month = find_highest(avg_temps)
+    highest_04_temp, hottest_month_04 = find_highest(db_04_temps)
+    highest_2_temp, hottest_month_2 = find_highest(db_2_temps)
+    
+    return {
+        'highest_avg_temp': highest_avg_temp,
+        'highest_04_temp': highest_04_temp,
+        'highest_2_temp': highest_2_temp,
+        'avg_hottest_month': avg_hottest_month,
+        '04_hottest_month': hottest_month_04,
+        '2_hottest_month': hottest_month_2
+    }
+
 def display_station_data_in_pdf_format(data: Dict):
     """Display station data in organized tables"""
     if not data:
