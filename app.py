@@ -752,26 +752,25 @@ def main():
     if st.session_state.selected_station_data:
         st.markdown("---")
         st.markdown('<h2 class="sub-header">📋 Station Meteorological Data (ASHRAE 2021)</h2>', unsafe_allow_html=True)
-        
+    
         # Display the data in PDF-like format
         display_station_data_in_pdf_format(st.session_state.selected_station_data)
+    
+        # Add download button section - ONLY IF wmo_code exists
+        if 'wmo_code' in locals() and wmo_code:
+            st.markdown("---")
+            st.markdown("### 📥 Export Data")
         
-    # Replace the download button section with this:
-
-    # Add download button at the bottom
-    st.markdown("---")
-    st.markdown("### 📥 Export Data")
-
-    # Create and display download button for CSV
-    csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
-
-    st.download_button(
-        label="📊 Download All Data as CSV",
-        data=csv_content,
-        file_name=f"ashrae_station_{wmo_code}_data.csv",
-        mime="text/csv",
-        width='stretch'
-    )
+            # Create and display download button for CSV
+            csv_content = export_station_data_to_csv(st.session_state.selected_station_data)
+        
+            st.download_button(
+                label="📊 Download All Data as CSV",
+                data=csv_content,
+                file_name=f"ashrae_station_{wmo_code}_data.csv",
+                mime="text/csv",
+                width='stretch'
+            )
     
     # Footer
     st.markdown("---")
