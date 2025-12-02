@@ -329,11 +329,11 @@ def display_station_data_in_pdf_format(data: Dict):
 
     # Table 1: Overview table
     st.markdown("---")
-    st.markdown("### 📋 Location & Basic Information")
+    st.markdown("### Design Information")
     
     highest_monthly_temps = extract_highest_monthly_temps(data)
     
-    location_data = {
+    overview_data = {
         "Parameter": ['Extreme Annual Max', 'Extreme Annual Min', 'N = 20 Max',
                       'N = 20 Min', 'N = 50 Max', 'N = 50 Min', 'Yearly 0.4% High',
                       'Yearly 2.0% High', 'Highest Monthly 0.4%', 'Highest Monthly 2.0%', 
@@ -354,137 +354,7 @@ def display_station_data_in_pdf_format(data: Dict):
             highest_monthly_temps.get('highest_avg_temp', 'N/A')
         ]
     }
-    st.table(pd.DataFrame(location_data))
-    
-    # Table 1: Location & Basic Info
-    st.markdown("---")
-    st.markdown("### 📋 Location & Basic Information")
-    location_data = {
-        "Parameter": [
-            "Latitude", "Longitude", "Country", "State/Region",
-            "Time Zone", "Climate Zone", "Coldest Month", "Hottest Month",
-            "Standard Pressure", "WBAN Code", "Warm Humid Location"
-        ],
-        "Value": [
-            f"{data.get('lat', 'N/A')}°",
-            f"{data.get('long', 'N/A')}°",
-            data.get('country', 'N/A'),
-            data.get('state', 'N/A'),
-            f"UTC{data.get('time_zone', 'N/A')}",
-            data.get('climate_zone', 'N/A'),
-            data.get('coldest_month', 'N/A'),
-            data.get('hottest_month', 'N/A'),
-            f"{data.get('stdp', 'N/A')} kPa",
-            data.get('wban', 'N/A'),
-            "Yes" if data.get('warm_humid_location') == '1' else "No"
-        ]
-    }
-    st.table(pd.DataFrame(location_data))
-      
-    # Table 2: Annual Cooling Design Conditions
-    st.markdown("---")
-    st.markdown("### Cooling Dry Bulb Values")
-    cooling_data = {
-        "Design Condition": ["0.4%", "2%"],
-        "Dry Bulb (°C)": [
-            data.get('cooling_DB_MCWB_0.4_DB', 'N/A'),
-            data.get('cooling_DB_MCWB_2_DB', 'N/A')
-        ],
-    }
-    st.table(pd.DataFrame(cooling_data))
-    
-    # Table 3: Extreme Temperatures
-    st.markdown("---")
-    st.markdown("### Extreme Temperatures (Dry Bulb)")
-    extreme_db_data = {
-        "": ["Extreme Annual Mean", "5-year", "10-year", "20-year", "50-year"],
-        "Minimum (°C)": [
-            data.get('extreme_annual_DB_mean_min', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_5_min', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_10_min', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_20_min', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_50_min', 'N/A')
-        ],
-        "Maximum (°C)": [
-            data.get('extreme_annual_DB_mean_max', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_5_max', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_10_max', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_20_max', 'N/A'),
-            data.get('n-year_return_period_values_of_extreme_DB_50_max', 'N/A')
-        ]
-    }
-    st.table(pd.DataFrame(extreme_db_data))
-    
-    # Table 4: Monthly Average Temperatures
-    st.markdown("---")
-    st.markdown("### Dry Bulb Average Monthly Temperatures (°C)")
-    monthly_data = {
-        "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        "Avg Temp (°C)": [
-            data.get('dbavg_jan', data.get('tavg_jan', 'N/A')),
-            data.get('dbavg_feb', data.get('tavg_feb', 'N/A')),
-            data.get('dbavg_mar', data.get('tavg_mar', 'N/A')),
-            data.get('dbavg_apr', data.get('tavg_apr', 'N/A')),
-            data.get('dbavg_may', data.get('tavg_may', 'N/A')),
-            data.get('dbavg_jun', data.get('tavg_jun', 'N/A')),
-            data.get('dbavg_jul', data.get('tavg_jul', 'N/A')),
-            data.get('dbavg_aug', data.get('tavg_aug', 'N/A')),
-            data.get('dbavg_sep', data.get('tavg_sep', 'N/A')),
-            data.get('dbavg_oct', data.get('tavg_oct', 'N/A')),
-            data.get('dbavg_nov', data.get('tavg_nov', 'N/A')),
-            data.get('dbavg_dec', data.get('tavg_dec', 'N/A'))
-        ],
-    }
-    st.table(pd.DataFrame(monthly_data))
-    st.metric("Annual Average Temperature", f"{data.get('dbavg_annual', data.get('tavg_annual', 'N/A'))}°C")
-
-    # Table 5: Monthly Design Dry Bulb Temperatures 0.4%
-    st.markdown("---")
-    st.markdown("### Monthly Design Dry Bulb Temperatures 0.4% (°C)")
-    monthly_db_04_data = {
-        "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        "Avg Temp (°C)": [
-            data.get('0.4_DB_jan', 'N/A'),
-            data.get('0.4_DB_feb', 'N/A'),
-            data.get('0.4_DB_mar', 'N/A'),
-            data.get('0.4_DB_apr', 'N/A'),
-            data.get('0.4_DB_may', 'N/A'),
-            data.get('0.4_DB_jun', 'N/A'),
-            data.get('0.4_DB_jul', 'N/A'),
-            data.get('0.4_DB_aug', 'N/A'),
-            data.get('0.4_DB_sep', 'N/A'),
-            data.get('0.4_DB_oct', 'N/A'),
-            data.get('0.4_DB_nov', 'N/A'),
-            data.get('0.4_DB_dec', 'N/A')
-        ]
-    }
-    st.table(pd.DataFrame(monthly_db_04_data))
-
-     # Table 7: Monthly Design Dry Bulb Temperatures 2%
-    st.markdown("---")
-    st.markdown("### Monthly Design Dry Bulb Temperatures 2% (°C)")
-    monthly_db_2_data = {
-        "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        "Avg Temp (°C)": [
-            data.get('2_DB_jan', 'N/A'),
-            data.get('2_DB_feb', 'N/A'),
-            data.get('2_DB_mar', 'N/A'),
-            data.get('2_DB_apr', 'N/A'),
-            data.get('2_DB_may', 'N/A'),
-            data.get('2_DB_jun', 'N/A'),
-            data.get('2_DB_jul', 'N/A'),
-            data.get('2_DB_aug', 'N/A'),
-            data.get('2_DB_sep', 'N/A'),
-            data.get('2_DB_oct', 'N/A'),
-            data.get('2_DB_nov', 'N/A'),
-            data.get('2_DB_dec', 'N/A')
-        ]
-    }
-    st.table(pd.DataFrame(monthly_db_2_data))
-
+    st.table(pd.DataFrame(overview_data))
     
 def export_station_data_to_csv(data: Dict) -> str:
     """Export all displayed station data to CSV format matching the display"""
