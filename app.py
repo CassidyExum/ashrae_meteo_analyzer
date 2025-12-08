@@ -446,7 +446,7 @@ def export_overview_data_to_csv(data: Dict) -> str:
 def create_static_map(center_coord, coordinates_list, marker_names=None, 
                      zoom_level=12, map_size=(800, 600)):
     """
-    Create a static map with tooltips that are permanently visible.
+    Create a static map with permanently visible tooltips.
     """
     
     m = folium.Map(
@@ -477,48 +477,10 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
         else:
             name = f"Station {i+1}"
         
-        folium.Marker(
-            [lat, lon],
-            popup=name,
-            tooltip=folium.Tooltip(
-                f"{i+1}. {name}",
-                permanent=True,  # This makes the tooltip always visible
-                direction='top',  # Position above marker
-                offset=(0, -10),  # Adjust position
-                className='permanent-label'  # Custom class for styling
-            ),
-            icon=folium.Icon(color='blue', icon='info-sign', prefix='fa')
-        ).add_to(m)
-    
-    # Auto-fit bounds
-    if coordinates_list:
-        all_coords = [center_coord] + coordinates_list
-        min_lat = min(coord[0] for coord in all_coords)
-        max_lat = max(coord[0] for coord in all_coords)
-        min_lon = min(coord[1] for coord in all_coords)
-        max_lon = max(coord[1] for coord in all_coords)
-        
-        lat_padding = (max_lat - min_lat) * 0.05
-        lon_padding = (max_lon - min_lon) * 0.05
-        
-        m.fit_bounds([
-            [min_lat - lat_padding, min_lon - lon_padding],
-            [max_lat + lat_padding, max_lon + lon_padding]
-        ])
-    
-    # Add CSS to style the permanent labels
-    m.get_root().html.add_child(folium.Element("""
-    <style>
-        .folium-map {
-            cursor: default !important;
-        }
-        
-        .leaflet-container {
-            pointer-events: none !important;
-        }
-        
-        /* Style the permanent labels */
-        .permanent-label {
+        # Create HTML for the permanent label
+        label_html = f'''
+        <div style="
+            position: absolute;
             background-color: white;
             border: 2px solid blue;
             border-radius: 8px;
@@ -529,27 +491,54 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
             color: #333;
             box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
             white-space: nowrap;
-            pointer-events: auto !important;
-        }
+            transform: translate(-50%, -100%);
+            margin-top: -35px;
+            z-index: 1000;
+        ">
+            {i+1}. {name}
+        </div>
+        '''
         
-        .leaflet-tooltip-top:before {
-            border-top-color: blue !important;
-        }
-    </style>
+        # Create a custom icon with the label
+        icon = folium.DivIcon(
+            html=label_html,
+            icon_size=(150, 35),  # Adjust size based on label content
+            icon_anchor=(75, 35)   # Center the label above marker
+        )
+        
+        folium.Marker(
+            [lat, lon],
+            popup=name,
+            icon=icon
+        ).add_to(m)
+        
+        # Also add a regular marker for the clickable point
+        folium.CircleMarker(
+            [lat, lon],
+            radius=6,
+            color='blue',
+            fill=True,
+            fill_color='blue',
+            fill_opacity=0.7,
+            popup=name
+        ).add_to(m)
     
-    <script>
-        // Make tooltips permanently visible on load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var tooltips = document.querySelectorAll('.leaflet-tooltip');
-                tooltips.forEach(function(tooltip) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.display = 'block';
-                });
-            }, 1000);
-        });
-    </script>
-    """))
+    # Auto-fit bounds with extra padding
+    if coordinates_list:
+        all_coords = [center_coord] + coordinates_list
+        min_lat = min(coord[0] for coord in all_coords)
+        max_lat = max(coord[0] for coord in all_coords)
+        min_lon = min(coord[1] for coord in all_coords)
+        max_lon = max(coord[1] for coord in all_coords)
+        
+        # Add more padding to ensure labels fit
+        lat_padding = (max_lat - min_lat) * 0.15  # Increased from 0.05
+        lon_padding = (max_lon - min_lon) * 0.15  # Increased from 0.05
+        
+        m.fit_bounds([
+            [min_lat - lat_padding, min_lon - lon_padding],
+            [max_lat + lat_padding, max_lon + lon_padding]
+        ])
     
     return m
 
@@ -698,10 +687,6 @@ def main():
                 st.markdown("**Map Legend:**")
                 st.markdown("🔴 **Red Star** = Your Input Location")
                 st.markdown("🔵 **Blue Marker** = Weather Station")
-            with col2:
-                st.markdown("**Note:**")
-                st.markdown("• Numbers on markers correspond to table order")
-                st.markdown("• Map automatically zooms to fit all locations")
         else:
             st.warning("Unable to display map - station coordinates are not available.")
         
