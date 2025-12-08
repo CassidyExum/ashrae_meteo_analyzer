@@ -446,7 +446,7 @@ def export_overview_data_to_csv(data: Dict) -> str:
 def create_static_map(center_coord, coordinates_list, marker_names=None, 
                      zoom_level=12, map_size=(800, 600)):
     """
-    Create a static map with permanently visible tooltips.
+    Create a static map with permanently visible labels.
     """
     
     m = folium.Map(
@@ -464,11 +464,11 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
     folium.Marker(
         center_coord,
         popup="Your Location",
-        tooltip="Center",
+        tooltip="Your Input Location",
         icon=folium.Icon(color='red', icon='star', prefix='fa')
     ).add_to(m)
     
-    # Add all station markers with permanent tooltips
+    # Add all station markers with embedded labels
     for i, coord in enumerate(coordinates_list):
         lat, lon = coord
         
@@ -477,53 +477,63 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
         else:
             name = f"Station {i+1}"
         
-        # Create HTML for the permanent label
+        # Create a custom marker with label
         label_html = f'''
         <div style="
-            position: absolute;
-            background-color: white;
-            border: 2px solid blue;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-weight: bold;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            color: #333;
-            box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            transform: translate(-50%, -100%);
-            margin-top: -35px;
-            z-index: 1000;
+            position: relative;
+            width: 150px;
+            height: 60px;
         ">
-            {i+1}. {name}
+            <!-- The label -->
+            <div style="
+                position: absolute;
+                top: -35px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: white;
+                border: 2px solid blue;
+                border-radius: 8px;
+                padding: 4px 8px;
+                font-weight: bold;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                color: #333;
+                box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+                white-space: nowrap;
+                z-index: 1000;
+            ">
+                {i+1}. {name[:25]}  <!-- Limit name length -->
+            </div>
+            
+            <!-- The marker -->
+            <div style="
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 12px;
+                height: 12px;
+                background-color: blue;
+                border: 2px solid white;
+                border-radius: 50%;
+                box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            "></div>
         </div>
         '''
         
-        # Create a custom icon with the label
         icon = folium.DivIcon(
             html=label_html,
-            icon_size=(150, 35),  # Adjust size based on label content
-            icon_anchor=(75, 35)   # Center the label above marker
+            icon_size=(150, 60),    # Match the div size
+            icon_anchor=(75, 15)    # Anchor at the bottom center of label div
         )
         
         folium.Marker(
             [lat, lon],
-            popup=name,
+            popup=f"<b>{i+1}. {name}</b><br>Click for details",
             icon=icon
         ).add_to(m)
-        
-        # Also add a regular marker for the clickable point
-        folium.CircleMarker(
-            [lat, lon],
-            radius=6,
-            color='blue',
-            fill=True,
-            fill_color='blue',
-            fill_opacity=0.7,
-            popup=name
-        ).add_to(m)
     
-    # Auto-fit bounds with extra padding
+    # Auto-fit bounds
     if coordinates_list:
         all_coords = [center_coord] + coordinates_list
         min_lat = min(coord[0] for coord in all_coords)
@@ -531,9 +541,9 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
         min_lon = min(coord[1] for coord in all_coords)
         max_lon = max(coord[1] for coord in all_coords)
         
-        # Add more padding to ensure labels fit
-        lat_padding = (max_lat - min_lat) * 0.15  # Increased from 0.05
-        lon_padding = (max_lon - min_lon) * 0.15  # Increased from 0.05
+        # Add padding for labels
+        lat_padding = (max_lat - min_lat) * 0.2
+        lon_padding = (max_lon - min_lon) * 0.2
         
         m.fit_bounds([
             [min_lat - lat_padding, min_lon - lon_padding],
