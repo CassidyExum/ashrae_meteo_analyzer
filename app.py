@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+import folium
+from streamlit_folium import folium_static
 from typing import List, Dict, Optional
 
 # Set page configuration
@@ -441,6 +443,116 @@ def export_overview_data_to_csv(data: Dict) -> str:
     
     return csv_data.getvalue()
 
+def create_static_map(center_coord, coordinates_list, marker_names=None, 
+                     zoom_level=12, map_size=(800, 600)):
+    """
+    Create a static map with tooltips that are permanently visible.
+    """
+    
+    m = folium.Map(
+        location=center_coord,
+        zoom_start=zoom_level,
+        width=map_size[0],
+        height=map_size[1],
+        zoom_control=False,
+        scroll_wheel_zoom=False,
+        dragging=False,
+        tiles='OpenStreetMap'
+    )
+    
+    # Add center marker (user input location)
+    folium.Marker(
+        center_coord,
+        popup="Your Location",
+        tooltip="Center",
+        icon=folium.Icon(color='red', icon='star', prefix='fa')
+    ).add_to(m)
+    
+    # Add all station markers with permanent tooltips
+    for i, coord in enumerate(coordinates_list):
+        lat, lon = coord
+        
+        if marker_names and i < len(marker_names):
+            name = marker_names[i]
+        else:
+            name = f"Station {i+1}"
+        
+        folium.Marker(
+            [lat, lon],
+            popup=name,
+            tooltip=folium.Tooltip(
+                f"{i+1}. {name}",
+                permanent=True,  # This makes the tooltip always visible
+                direction='top',  # Position above marker
+                offset=(0, -10),  # Adjust position
+                className='permanent-label'  # Custom class for styling
+            ),
+            icon=folium.Icon(color='blue', icon='info-sign', prefix='fa')
+        ).add_to(m)
+    
+    # Auto-fit bounds
+    if coordinates_list:
+        all_coords = [center_coord] + coordinates_list
+        min_lat = min(coord[0] for coord in all_coords)
+        max_lat = max(coord[0] for coord in all_coords)
+        min_lon = min(coord[1] for coord in all_coords)
+        max_lon = max(coord[1] for coord in all_coords)
+        
+        lat_padding = (max_lat - min_lat) * 0.05
+        lon_padding = (max_lon - min_lon) * 0.05
+        
+        m.fit_bounds([
+            [min_lat - lat_padding, min_lon - lon_padding],
+            [max_lat + lat_padding, max_lon + lon_padding]
+        ])
+    
+    # Add CSS to style the permanent labels
+    m.get_root().html.add_child(folium.Element("""
+    <style>
+        .folium-map {
+            cursor: default !important;
+        }
+        
+        .leaflet-container {
+            pointer-events: none !important;
+        }
+        
+        /* Style the permanent labels */
+        .permanent-label {
+            background-color: white;
+            border: 2px solid blue;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            pointer-events: auto !important;
+        }
+        
+        .leaflet-tooltip-top:before {
+            border-top-color: blue !important;
+        }
+    </style>
+    
+    <script>
+        // Make tooltips permanently visible on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                var tooltips = document.querySelectorAll('.leaflet-tooltip');
+                tooltips.forEach(function(tooltip) {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.display = 'block';
+                });
+            }, 1000);
+        });
+    </script>
+    """))
+    
+    return m
+
 # Main App
 def main():
     # RRC logo
@@ -544,6 +656,54 @@ def main():
                 "Distance (miles)": st.column_config.TextColumn(width="medium")
             }
         )
+
+        # Add Map Section
+        st.markdown('<h2 class="sub-header">🗺️ Station Map</h2>', unsafe_allow_html=True)
+        
+        # Prepare data for the map
+        center_coord = (latitude, longitude)
+        station_coords = []
+        station_names = []
+        
+        for station in st.session_state.stations:
+            lat = station.get('lat')
+            lon = station.get('long')
+            name = station.get('place', 'Unknown Station')
+            
+            if lat != 'N/A' and lon != 'N/A':
+                try:
+                    lat_float = float(lat)
+                    lon_float = float(lon)
+                    station_coords.append((lat_float, lon_float))
+                    station_names.append(name)
+                except (ValueError, TypeError):
+                    continue
+        
+        if station_coords:
+            # Create the map
+            station_map = create_static_map(
+                center_coord=center_coord,
+                coordinates_list=station_coords,
+                marker_names=station_names,
+                zoom_level=8,
+                map_size=(800, 500)
+            )
+            
+            # Display the map
+            folium_static(station_map, width=800, height=500)
+            
+            # Add legend
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Map Legend:**")
+                st.markdown("🔴 **Red Star** = Your Input Location")
+                st.markdown("🔵 **Blue Marker** = Weather Station")
+            with col2:
+                st.markdown("**Note:**")
+                st.markdown("• Numbers on markers correspond to table order")
+                st.markdown("• Map automatically zooms to fit all locations")
+        else:
+            st.warning("Unable to display map - station coordinates are not available.")
         
         # Station selection section (moved under the table)
         st.markdown('<h2 class="sub-header">⚙️ Station Selection</h2>', unsafe_allow_html=True)
