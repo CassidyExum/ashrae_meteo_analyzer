@@ -484,7 +484,7 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
             [lat, lon],
             popup=f"<b>{name}</b><br>",
             tooltip=tooltip_text,
-            icon=folium.Icon(color='blue', icon='info-sign', prefix='fa')
+            icon=folium.Icon(color='blue', icon='info-circle')
         ).add_to(m)
     
     # Auto-fit bounds
