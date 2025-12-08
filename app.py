@@ -446,7 +446,7 @@ def export_overview_data_to_csv(data: Dict) -> str:
 def create_static_map(center_coord, coordinates_list, marker_names=None, 
                      zoom_level=12, map_size=(800, 600)):
     """
-    Create a static map with tooltips that are permanently visible.
+    Create a static map with hover tooltips.
     """
     
     m = folium.Map(
@@ -460,34 +460,31 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
         tiles='OpenStreetMap'
     )
     
-    # Add center marker
+    # Add center marker (user input location)
     folium.Marker(
         center_coord,
-        popup="Center Location",
-        tooltip="Center",
-        icon=folium.Icon(color='red', icon='star')
+        popup="Your Location",
+        tooltip="Your Input Location",
+        icon=folium.Icon(color='red', icon='star', prefix='fa')
     ).add_to(m)
     
-    # Add all other markers with permanent tooltips
+    # Add all station markers with hover tooltips
     for i, coord in enumerate(coordinates_list):
         lat, lon = coord
         
         if marker_names and i < len(marker_names):
             name = marker_names[i]
         else:
-            name = f"Location {i+1}"
+            name = f"Station {i+1}"
+        
+        # Format tooltip text
+        tooltip_text = f"<b>{i+1}. {name}</b>"
         
         folium.Marker(
             [lat, lon],
-            popup=name,
-            tooltip=folium.Tooltip(
-                name,
-                permanent=True,  # This makes the tooltip always visible
-                direction='top',  # Position above marker
-                offset=(0, -10),  # Adjust position
-                className='permanent-label'  # Custom class for styling
-            ),
-            icon=folium.Icon(color='blue', icon='info-sign')
+            popup=f"<b>{name}</b><br>Click for details",
+            tooltip=tooltip_text,
+            icon=folium.Icon(color='blue', icon='info-sign', prefix='fa')
         ).add_to(m)
     
     # Auto-fit bounds
@@ -505,51 +502,6 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
             [min_lat - lat_padding, min_lon - lon_padding],
             [max_lat + lat_padding, max_lon + lon_padding]
         ])
-    
-    # Add CSS to style the permanent labels
-    m.get_root().html.add_child(folium.Element("""
-    <style>
-        .folium-map {
-            cursor: default !important;
-        }
-        
-        .leaflet-container {
-            pointer-events: none !important;
-        }
-        
-        /* Style the permanent labels */
-        .permanent-label {
-            background-color: white;
-            border: 2px solid blue;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-weight: bold;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            color: #333;
-            box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            pointer-events: auto !important;
-        }
-        
-        .leaflet-tooltip-top:before {
-            border-top-color: blue !important;
-        }
-    </style>
-    
-    <script>
-        // Make tooltips permanently visible on load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var tooltips = document.querySelectorAll('.leaflet-tooltip');
-                tooltips.forEach(function(tooltip) {
-                    tooltip.style.opacity = '1';
-                    tooltip.style.display = 'block';
-                });
-            }, 1000);
-        });
-    </script>
-    """))
     
     return m
 
