@@ -482,7 +482,7 @@ def create_static_map(center_coord, coordinates_list, marker_names=None,
         
         folium.Marker(
             [lat, lon],
-            popup=f"<b>{name}</b><br>Click for details",
+            popup=f"<b>{name}</b><br>",
             tooltip=tooltip_text,
             icon=folium.Icon(color='blue', icon='info-sign', prefix='fa')
         ).add_to(m)
