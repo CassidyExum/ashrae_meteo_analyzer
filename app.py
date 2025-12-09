@@ -527,6 +527,8 @@ def main():
     Find weather stations and access ASHRAE 2021 meteorological data for any location.
     
     [Visit the ASHRAE site](https://ashrae-meteo.info/v3.0/)
+
+    [Visit the GitHub](https://github.com/CassidyExum/ashrae_meteo_analyzer/)
     """)
     
     # Initialize session state
@@ -733,8 +735,6 @@ def main():
         <p>ASHRAE 2021 Meteo Data v3.0 | Data provided by ashrae-meteo.info</p>
         <p>This tool retrieves ASHRAE 2021 meteorological design conditions for Solar and BESS system design</p>
         <p><strong>Fixed Settings:</strong> Always shows 10 nearest stations | Always uses ASHRAE 2021 version</p>
-        
-        [Visit the GitHub](https://github.com/CassidyExum/scan-site-analyzer)
     </div>
     """, unsafe_allow_html=True)
 
