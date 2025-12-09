@@ -130,6 +130,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Future Enhancements
 
-- [ ] Add map visualization of station locations
+- [X] Add map visualization of station locations
 
 ---
